@@ -1,17 +1,27 @@
 package thedarkdnktv.openbjs.network;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class NetHandler {
+	
+	public static URL from(String url) {
+		try {
+			URL result = new URL(url);
+			return result;
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 	
 	public JsonObject parseToJson(byte[] data) {
 		try {
@@ -32,7 +42,7 @@ public class NetHandler {
 	 * @param rawData the data
 	 * @return data
 	 */
-	public InputStream post(URL host, String contentType, byte[] rawData) {
+	public byte[] post(URL host, String contentType, byte[] rawData) {
 		return post(host, contentType, rawData, 0x80000);
 	}
 	
@@ -44,7 +54,7 @@ public class NetHandler {
 	 * @param answerMaxLenght the lenght of answer in bytes, to prevent cutting of from buffered stream
 	 * @return data
 	 */
-	public InputStream post(URL host, String contentType, byte[] rawData, int answerMaxLenght) {
+	public byte[] post(URL host, String contentType, byte[] rawData, int answerMaxLenght) {
 		try {
 			HttpURLConnection con = (HttpURLConnection) host.openConnection();
 			con.setDoOutput(true);
@@ -56,14 +66,20 @@ public class NetHandler {
 				out.write(rawData);
 			}
 			
-			InputStream result = new BufferedInputStream(con.getInputStream(), answerMaxLenght); // TODO could be triky and not saves data
+			byte[] result = new byte[0];
+			try (InputStream in = con.getInputStream()) {
+				result = new byte[in.available()];
+				while (in.read(result) != -1);
+			}
+
+			
 			con.disconnect();
 			return result;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		return nullInputStream();
+		return new byte[0];
 	}
 	
 	// TODO

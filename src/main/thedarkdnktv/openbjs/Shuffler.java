@@ -1,5 +1,6 @@
 package thedarkdnktv.openbjs;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,63 +16,50 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 import thedarkdnktv.openbjs.exception.ShoeNotValidException;
 import thedarkdnktv.openbjs.exception.WrongShuffleException;
+import thedarkdnktv.openbjs.network.NetHandler;
 
 public class Shuffler {
 	
 	private static Random random;
-	protected static final Set<? extends Card> STANDARD;
+	protected static final Set<Card> STANDARD;
 	
 	static {
-		Set<? extends Card> shoe = new HashSet<>(getNewShoe());
+		Set<Card> shoe = new HashSet<>(getNewShoe());
 		STANDARD = Collections.unmodifiableSet(shoe);
 	}
 	
 	public static void initRandom() {
 		if (random == null) {
-//			try {
-//				HttpURLConnection con = (HttpURLConnection) URI.create("https://api.random.org/json-rpc/1/invoke").toURL().openConnection();
-//				con.setDoOutput(true);
-//				con.setRequestMethod("POST");
-//				con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-//				con.connect();
-//				
-//				JsonObject obj = new JsonObject();
-//				JsonObject params = new JsonObject();
-//				
-//				params.add("apiKey", new JsonPrimitive("7b57e9cc-6ebe-4c05-9456-a47e4e02ac62"));
-//				params.add("n", new JsonPrimitive(1));
-//				params.add("min", new JsonPrimitive(100000));
-//				params.add("max", new JsonPrimitive(1000000000));
-//				
-//				obj.add("jsonrpc", new JsonPrimitive("2.0"));
-//				obj.add("method", new JsonPrimitive("generateIntegers"));
-//				obj.add("id", new JsonPrimitive(0));
-//				obj.add("params", params);
-//				
-//				try (OutputStream out = con.getOutputStream()) {
-//					out.write(obj.toString().getBytes(StandardCharsets.UTF_8));
-//				}
-//				
-//				BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-//				String answer = in.readLine();
-//				con.disconnect();
-//				
-//                try {
-//            		JsonObject result = new JsonParser().parse(answer).getAsJsonObject();
-//            		long seed = result.get("result").getAsJsonObject().get("random").getAsJsonObject().get("data").getAsJsonArray().get(0).getAsLong();
-//            		OpenBJS.info("Random seed: " + seed);
-//            		
-//            		random = new Random(seed);
-//            	} catch (Throwable e) {
-//            		throw new IOException();
-//            	}
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//				System.exit(-1);
-//			}
-			random = new Random();
+			if (!OpenBJS.DEBUG) {
+				JsonObject obj = new JsonObject();
+				JsonObject params = new JsonObject();
+				
+				params.add("apiKey", new JsonPrimitive(OpenBJS.RANDOMORG_API_KEY));
+				params.add("n", new JsonPrimitive(1));
+				params.add("min", new JsonPrimitive(100000));
+				params.add("max", new JsonPrimitive(1000000000));
+				
+				obj.add("jsonrpc", new JsonPrimitive("2.0"));
+				obj.add("method", new JsonPrimitive("generateIntegers"));
+				obj.add("id", new JsonPrimitive(0));
+				obj.add("params", params);
+				
+				byte[] data = OpenBJS.net.post(NetHandler.from("https://api.random.org/json-rpc/1/invoke"), "application/json", obj.toString().getBytes(StandardCharsets.UTF_8));
+				
+				try {
+					JsonObject answer = OpenBJS.net.parseToJson(data);
+					long seed = answer.get("result").getAsJsonObject().get("random").getAsJsonObject().get("data").getAsJsonArray().get(0).getAsLong();
+	        		OpenBJS.info("Random seed: " + seed);
+	        		random = new Random(seed);
+				} catch (Throwable e) {
+					throw new RuntimeException(e);
+				}
+			} else random = new Random();
 		} else {
 			random = new Random(random.nextLong());
 		}
