@@ -3,7 +3,6 @@ package thedarkdnktv.openbjs;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-
 import thedarkdnktv.openbjs.enums.*;
 
 public class Card {
@@ -66,5 +65,15 @@ public class Card {
 	@Override
 	public int hashCode() {
 		return suit.hashCode() + rank.hashCode() + deckID;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Card) {
+			Card crd = (Card) obj;
+			return crd.deckID == this.deckID && crd.rank == this.rank && crd.suit == this.suit;
+		}
+		
+		return false;
 	}
 }
