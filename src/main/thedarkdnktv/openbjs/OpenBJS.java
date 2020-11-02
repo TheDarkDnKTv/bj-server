@@ -3,6 +3,8 @@ package thedarkdnktv.openbjs;
 import java.util.ArrayList;
 import java.util.Queue;
 
+import thedarkdnktv.openbjs.game.Card;
+import thedarkdnktv.openbjs.game.Shuffler;
 import thedarkdnktv.openbjs.network.NetHandler;
 
 /**
@@ -19,23 +21,14 @@ public class OpenBJS {
 	public static NetHandler net = new NetHandler();
 	
 	public static void main(String[] args) throws Throwable {
-		Queue<Card> shoe = Shuffler.getNewShoe();
 		
-		info("New shoe: " + shoe.size() + " " + shoe);
-		
-		shoe = Shuffler.chemmyShuffle(shoe);
-		info("Chemmy shuffle: " + shoe.size() + " " + shoe);
-		
-		shoe = Shuffler.shuffle(shoe);
-		info("Shuffle: " + shoe.size() + " " + shoe);
-		info("Cutting card: " + new ArrayList<>(shoe).indexOf(Card.CUTTING_CARD));
 	}
 	
-	protected static void info(Object o) {
+	public static void info(Object o) {
 		System.out.println(o == null ? "null" : o.toString());
 	}
 	
-	protected static int ceil(double value) {
+	public static int ceil(double value) {
 		return (int) Math.ceil(value);
 	}
 }

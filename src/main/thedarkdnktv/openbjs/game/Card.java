@@ -1,16 +1,23 @@
-package thedarkdnktv.openbjs;
+package thedarkdnktv.openbjs.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import thedarkdnktv.openbjs.enums.*;
 
+/**
+ * Class encapsulating single card with it value
+ * @author iDnK
+ *
+ */
 public class Card {
 	
 	private Rank rank;
 	private Suit suit;
+	/** For debug purpuses only, to control a duplicates in shoe */
 	private int deckID = 0;
 	
+	/** Use <b>only this</b> instance to cut off a shoe halfs */
 	public static final Card CUTTING_CARD = new Card(null, null, -1);
 	
 	private Card(Rank rank, Suit suit, int deckID) {
@@ -20,8 +27,8 @@ public class Card {
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * The factory method
+	 * @return a new single deck of cards
 	 */
 	public static Collection<Card> getDeck(int deckID) {
 		ArrayList<Card> deck = new ArrayList<>();
@@ -35,6 +42,10 @@ public class Card {
 		return Collections.unmodifiableCollection(deck);
 	}
 	
+	/**
+	 * Display-friendly toString method
+	 * @return
+	 */
 	public String toStringS() {
 		return suit == null || rank == null ? "CUTTING_CARD" : suit.SYMBOL + rank.DENOMINATION;
 	}

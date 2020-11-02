@@ -1,4 +1,4 @@
-package thedarkdnktv.openbjs;
+package thedarkdnktv.openbjs.game;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -19,10 +19,22 @@ import java.util.stream.Collectors;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import thedarkdnktv.openbjs.OpenBJS;
 import thedarkdnktv.openbjs.exception.ShoeNotValidException;
 import thedarkdnktv.openbjs.exception.WrongShuffleException;
 import thedarkdnktv.openbjs.network.NetHandler;
 
+/**
+ * Provides all functionallity related with shuffler work:<br>
+ * <ul>
+ * 	<li>new shoe creation</li>
+ * 	<li>chemmy shuffle procedure</li>
+ *  <li>shuffle procedure</li>
+ *  <li>shoe validation</li>
+ * </ul>
+ * @author TheDarkDnKTv
+ *
+ */
 public class Shuffler {
 	
 	private static Random random;

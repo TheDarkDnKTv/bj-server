@@ -1,5 +1,10 @@
 package thedarkdnktv.openbjs.enums;
 
+/**
+ * Enum of all card ranks used in a game
+ * @author TheDarkDnKTv
+ *
+ */
 public enum Rank {
 	ACE		(1, 	"A"	),
 	TWO		(2, 	"2"	),

@@ -10,6 +10,11 @@ import java.nio.charset.StandardCharsets;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+/**
+ * 
+ * @author TheDarkDnKTv
+ *
+ */
 public class NetHandler {
 	
 	public static URL from(String url) {
