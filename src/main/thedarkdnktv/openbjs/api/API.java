@@ -13,7 +13,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
-import thedarkdnktv.openbjs.OpenBJS;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import thedarkdnktv.openbjs.api.annotation.Client;
 
 /**
@@ -25,7 +27,7 @@ public class API {
 	public static final String Version = "1.0.0";
 	
 	private static final Map<String, IClient> REGISTRY = new HashMap<>();
-	
+	private static final Logger logger = LogManager.getLogger();
 	
 	public static void init() {
 		URLClassLoader cloader = (URLClassLoader) API.class.getClassLoader();
@@ -59,9 +61,7 @@ public class API {
 						clients.add(clazz);
 					}
 				}
-			} catch (Throwable e) {
-				e.printStackTrace();
-			}
+			} catch (Throwable e) {}
 		}
 		
 		for (Class<?> cl : clients) {
@@ -71,16 +71,16 @@ public class API {
 					String id = cl.getAnnotation(Client.class).clientId();
 					API.addClient(id, instance);
 				} catch (Throwable e) {
-					OpenBJS.info("Failed to initialize client " + cl.toString());
-					e.printStackTrace();
+					logger.error("Failed to initialize client " + cl.toString());
+					logger.catching(e);
 				}
 			}
 		}
 		
 		if (!REGISTRY.isEmpty()) {
-			OpenBJS.info("Registered " + REGISTRY.size() + " API-based clients");
+			logger.info("Registered " + REGISTRY.size() + " API-based clients");
 		} else {
-			OpenBJS.info("No API-based clients was found");
+			logger.info("No API-based clients was found");
 		}
 	}
 	

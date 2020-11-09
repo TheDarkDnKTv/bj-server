@@ -16,6 +16,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -36,6 +39,8 @@ import thedarkdnktv.openbjs.network.NetHandler;
  *
  */
 public class Shuffler {
+	
+	private static final Logger logger = LogManager.getLogger();
 	
 	private static Random random;
 	protected static final Set<Card> STANDARD;
@@ -66,7 +71,7 @@ public class Shuffler {
 				try {
 					JsonObject answer = OpenBJS.net.parseToJson(data);
 					long seed = answer.get("result").getAsJsonObject().get("random").getAsJsonObject().get("data").getAsJsonArray().get(0).getAsLong();
-	        		OpenBJS.info("Random seed: " + seed);
+	        		logger.info("Random seed: " + seed);
 	        		random = new Random(seed);
 				} catch (Throwable e) {
 					throw new RuntimeException(e);
@@ -76,7 +81,7 @@ public class Shuffler {
 			random = new Random(random.nextLong());
 		}
 		
-		OpenBJS.info("Random successfully initialized");
+		logger.info("Random successfully initialized");
 	}
 	
 	/**

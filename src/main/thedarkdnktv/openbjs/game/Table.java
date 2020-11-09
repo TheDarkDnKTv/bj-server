@@ -1,11 +1,10 @@
 package thedarkdnktv.openbjs.game;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Class encapsulating gaming table
@@ -13,13 +12,14 @@ import java.util.concurrent.ArrayBlockingQueue;
  *
  */
 public class Table {
+	private static final Logger log = LogManager.getLogger();
 	
 	private final Box[] boxes;
 	private final Dealer dealer;
 	
 	private Queue<? extends Card> shoe;
 	private List<? extends Card> holder;
-	private State state = State.WAITING_FOR_BETS;
+	private State state = State.DISABLED;
 	
 	/** Betting time in milliseconds */
 	private int BETTING_TIME = 4000;
@@ -29,12 +29,11 @@ public class Table {
 	 * @param boxes min - 3; max - 9
 	 * @param shoe
 	 */
-	public Table(int boxes, Collection<? extends Card> shoe) {
+	public Table(int boxes) {
 		if (boxes < 3 || boxes > 9)
 			throw new IllegalArgumentException("Wrong boxes amount: " + boxes);
 		this.boxes = new Box[boxes];
 		this.dealer = new Dealer();
-		this.shoe = new ArrayBlockingQueue<>(shoe.size(), true, shoe);
 		this.holder = new ArrayList<>();
 		for (int i = 0; i < this.boxes.length; i++)
 			this.boxes[i] = new Box();
@@ -44,7 +43,13 @@ public class Table {
 	 * Main update method
 	 */
 	public void update() {
-		
+		if (state != State.DISABLED) {
+			if (shoe == null) {
+				log.info("Have no shoe installed, proceed to generate new shoe");
+			}
+			
+			
+		}
 	}
 	
 	/**
@@ -85,6 +90,7 @@ public class Table {
 	public static enum State {
 		WAITING_FOR_BETS,
 		BETTING_TIME,
-		IN_GAME;
+		IN_GAME,
+		DISABLED;
 	}
 }

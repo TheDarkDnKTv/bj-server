@@ -8,8 +8,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import thedarkdnktv.openbjs.OpenBJS;
 import thedarkdnktv.openbjs.command.CommandStop;
+import thedarkdnktv.openbjs.command.CommandTable;
 import thedarkdnktv.openbjs.command.ICommand;
 import thedarkdnktv.openbjs.exception.CommandExecuteException;
 
@@ -20,6 +24,7 @@ import thedarkdnktv.openbjs.exception.CommandExecuteException;
  */
 public class CommandManager implements Runnable {
 	private static final List<ICommand> commandRegistry = new ArrayList<>();
+	private static final Logger logger = LogManager.getLogger();
 	
 	private final List<String> pendingCommands = Collections.synchronizedList(new ArrayList<>());
 	
@@ -34,6 +39,7 @@ public class CommandManager implements Runnable {
 	 */
 	public static void init() {
 		registerCommand(new CommandStop());
+		registerCommand(new CommandTable());
 	}
 	
 	public void executePendingCommands() {
@@ -43,8 +49,10 @@ public class CommandManager implements Runnable {
 			try {
 				this.processCommand(new ArrayList<>(Arrays.asList(command.split(" "))));
 			} catch (CommandExecuteException e) {
-				OpenBJS.info("Exception occurew trying execute command");
-				e.printStackTrace();
+				logger.info("Exception occured trying execute command - '" + e.getMessage() + "'");
+				if (logger.isDebugEnabled()) {
+					logger.catching(e);
+				}
 			}
 		}
 	}
@@ -54,16 +62,16 @@ public class CommandManager implements Runnable {
 		ICommand command = this.findCommand(comName);
 		if (command != null) {
 			try {
-				if (command.isValidInput(lines)) {
+				if (command.isValidInput(new ArrayList<>(lines))) {
 					command.execute(lines);
 				} else {
-					OpenBJS.info(command.getUsageString());
+					logger.info(command.getUsageString());
 				}
 			} catch (Throwable e) {
 				throw new CommandExecuteException("command: " + comName, e);
 			}
 		} else {
-			OpenBJS.info("Unknown command: " + comName);
+			logger.error("Unknown command: " + comName);
 		}
 	}
 	
@@ -93,6 +101,10 @@ public class CommandManager implements Runnable {
 	@Override
 	public void run() {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));) {
+			while (OpenBJS.INSTANCE == null) {
+				Thread.sleep(50);
+			}
+			
 			while (OpenBJS.INSTANCE.isRunning()) {
 				if (reader.ready()) {
 					String command = reader.readLine();
@@ -100,8 +112,7 @@ public class CommandManager implements Runnable {
 				}
 			}
 		} catch (Throwable e) {
-			e.printStackTrace();
-			// TODO
+			logger.catching(e);
 		}
 	}
 }

@@ -7,6 +7,10 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -16,13 +20,14 @@ import com.google.gson.JsonParser;
  *
  */
 public class NetHandler {
+	private static final Logger logger = LogManager.getLogger();
 	
 	public static URL from(String url) {
 		try {
 			URL result = new URL(url);
 			return result;
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
+			logger.catching(e);
 		}
 		
 		return null;
@@ -34,7 +39,7 @@ public class NetHandler {
 			JsonObject result = new JsonParser().parse(jsonData).getAsJsonObject();
 			return result;
 		} catch (Throwable e) {
-			e.printStackTrace();
+			logger.catching(e);
 		}
 		
 		return null;
@@ -81,7 +86,7 @@ public class NetHandler {
 			con.disconnect();
 			return result;
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.catching(e);
 		}
 		
 		return new byte[0];
