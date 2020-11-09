@@ -15,6 +15,8 @@ import thedarkdnktv.openbjs.game.Table;
  */
 public class CommandTable implements ICommand {
 	private static final Logger logger = LogManager.getLogger();
+	private static final Function<List<String>, Boolean> checkInt;
+	
 	
 	@Override
 	public String[] getNames() {
@@ -34,8 +36,9 @@ public class CommandTable implements ICommand {
 	@Override
 	public String getUsageString() {
 		return "Next arguments is available for this command:\n"
-				+ " * new <amount of boxes>\n"
-				+ " * stop <table id>";
+				+ " * new <amount of boxes> creates new table\n"
+				+ " * stop <table id> removing table with id\n" // FIXME change commands
+				+ " * launch <table id> launching disabled table with id";
 	}
 
 	@Override
@@ -47,6 +50,9 @@ public class CommandTable implements ICommand {
 			break;
 		case STOP:
 			this.removeTable(Integer.parseInt(properties.get(0)));
+			break;
+		case LAUNCH:
+			this.launch(Integer.parseInt(properties.get(0)));
 			break;
 		}
 	}
@@ -64,16 +70,34 @@ public class CommandTable implements ICommand {
 		}
 	}
 	
-	private static enum SubCommand {
-		NEW		(args -> {
+	private void launch(int id) {
+		Table table = OpenBJS.INSTANCE.getTableManager().getTable(id);
+		if (table != null) {
+			table.launch();
+			logger.info("Table with id " + id + " launched successfully");
+		}
+	}
+	
+	static {
+		checkInt = args -> {
 			try {
 				Integer.parseInt(args.get(0));
 				return true;
 			} catch (Throwable e) {
 				return false;
 			}
-		}),
-		STOP	(NEW.checkArgs);
+		};
+	}
+	
+	/**
+	 * 
+	 * @author TheDarkDnKTv
+	 *
+	 */
+	private static enum SubCommand {
+		NEW		(checkInt),
+		LAUNCH	(checkInt),
+		STOP	(checkInt);
 		
 		public final Function<List<String>, Boolean> checkArgs;
 		

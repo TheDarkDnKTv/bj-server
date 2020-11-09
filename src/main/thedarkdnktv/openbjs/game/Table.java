@@ -17,8 +17,8 @@ public class Table {
 	private final Box[] boxes;
 	private final Dealer dealer;
 	
-	private Queue<? extends Card> shoe;
-	private List<? extends Card> holder;
+	private Shoe shoe;
+	private List<Card> holder;
 	private State state = State.DISABLED;
 	
 	/** Betting time in milliseconds */
@@ -33,6 +33,7 @@ public class Table {
 		if (boxes < 3 || boxes > 9)
 			throw new IllegalArgumentException("Wrong boxes amount: " + boxes);
 		this.boxes = new Box[boxes];
+		this.shoe = new Shoe();
 		this.dealer = new Dealer();
 		this.holder = new ArrayList<>();
 		for (int i = 0; i < this.boxes.length; i++)
@@ -44,8 +45,8 @@ public class Table {
 	 */
 	public void update() {
 		if (state != State.DISABLED) {
-			if (shoe == null) {
-				log.info("Have no shoe installed, proceed to generate new shoe");
+			if (shoe.isNew()) {
+				log.info("Shoe is new, there is no cards. Proceed to create and shuffle");
 			}
 			
 			
@@ -66,9 +67,18 @@ public class Table {
 		return false;
 	}
 	
-	private boolean isBoxInRange(int box) {
-		return box > 0 && box <= boxes.length;
+	public void launch() {
+		if (state == State.DISABLED) {
+			state = State.WAITING_FOR_BETS;
+		}
 	}
+	
+	public State getState() {
+		return state;
+	}
+
+	
+	
 	
 	public static class Dealer extends Box {
 		

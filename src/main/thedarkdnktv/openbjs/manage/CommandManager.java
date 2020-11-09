@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import thedarkdnktv.openbjs.OpenBJS;
+import thedarkdnktv.openbjs.command.CommandStatus;
 import thedarkdnktv.openbjs.command.CommandStop;
 import thedarkdnktv.openbjs.command.CommandTable;
 import thedarkdnktv.openbjs.command.ICommand;
@@ -40,6 +41,7 @@ public class CommandManager implements Runnable {
 	public static void init() {
 		registerCommand(new CommandStop());
 		registerCommand(new CommandTable());
+		registerCommand(new CommandStatus());
 	}
 	
 	public void executePendingCommands() {

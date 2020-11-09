@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import thedarkdnktv.openbjs.game.Table;
+import thedarkdnktv.openbjs.game.Table.State;
 
 /**
  * 
@@ -37,6 +38,10 @@ public class TableManager {
 	}
 	
 	public int activeTableCount() {
+		return (int) gamingTables.values().stream().filter(t -> t.getState() != State.DISABLED).count();
+	}
+	
+	public int totalTablesCount() {
 		return gamingTables.size();
 	}
 	

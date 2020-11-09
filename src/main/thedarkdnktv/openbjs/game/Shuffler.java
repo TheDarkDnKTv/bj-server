@@ -9,10 +9,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -88,8 +86,8 @@ public class Shuffler {
 	 * Get a new shoe after card change
 	 * @return
 	 */
-	public static Queue<Card> getNewShoe() {
-		Queue<Card> shoe = new ArrayBlockingQueue<>(OpenBJS.CARDS + 1, true);
+	public static Shoe getNewShoe() {
+		Shoe shoe = new Shoe();
 		
 		for (int i = 1; i <= 8; i++) {
 			Collection<Card> deck = Card.getDeck(i);
@@ -102,19 +100,19 @@ public class Shuffler {
 	/**
 	 * Randomize the card positions in shoe
 	 */
-	public static Queue<Card> chemmyShuffle(Collection<? extends Card> shoe) {
+	public static Shoe chemmyShuffle(Collection<? extends Card> shoe) {
 		List<Card> sorted = shoe.stream()
 			.map(card -> new Pair<>(card, random.nextLong()))
 			.sorted(Comparator.comparingLong(pair -> pair.getValue()))
 			.map(pair -> pair.getKey())
 			.collect(Collectors.toList());
-		return new ArrayBlockingQueue<>(OpenBJS.CARDS + 1, true, sorted);
+		return new Shoe(sorted);
 	}
 	
 	/**
 	 * Real shuffle procedure, shuffling the shoe.
 	 */
-	public static Queue<Card> shuffle(Collection<? extends Card> mainShoe) {
+	public static Shoe shuffle(Collection<? extends Card> mainShoe) {
 		List<Card> shoe = new ArrayList<>(mainShoe);
 		shoe.removeIf(card -> card == Card.CUTTING_CARD);
 		
@@ -124,9 +122,7 @@ public class Shuffler {
 		shuffleRound(shoe, Shuffler::riffle);
 		shuffleRound(shoe, Shuffler::riffle);
 		shuffleRound(shoe, Shuffler::riffleStripRiffle);
-		
-		if (!validateShoe(shoe))
-			throw new ShoeNotValidException(new WrongShuffleException("Shoe size: " + shoe.size() + ", values: " + shoe.toString()));
+			
 		return prepareForGame(shoe);
 	}
 	
@@ -141,7 +137,7 @@ public class Shuffler {
 		return shoe1.containsAll(STANDARD) && shoe.size() == shoe1.size();
 	}
 	
-	private static <C extends Card> Queue<Card> prepareForGame(List<C> shoe) {
+	private static <C extends Card> Shoe prepareForGame(List<C> shoe) {
 		List<Card> temp = new ArrayList<>();
 		int position = shoe.size() / 2 + getHalfOffset();
 		temp.addAll(shoe.subList(position, shoe.size()));
@@ -150,8 +146,11 @@ public class Shuffler {
 		shoe.clear();
 		position = temp.size() / 2 + getHalfOffset();
 		temp.add(position, Card.CUTTING_CARD);
-		
-		return new ArrayBlockingQueue<>(temp.size() + 1, true, temp);
+		Shoe shoe1 = new Shoe(temp);
+		if (shoe1.validate()) 
+			throw new ShoeNotValidException(new WrongShuffleException("Shoe size: " + shoe1.size() + ", values: " + shoe1.toString()));
+		shoe1.setShuffled();
+		return shoe1;
 	}
 	
 	/**
