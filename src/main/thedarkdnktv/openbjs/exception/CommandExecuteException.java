@@ -1,5 +1,10 @@
 package thedarkdnktv.openbjs.exception;
 
+/**
+ *
+ * @author TheDarkDnKTv
+ *
+ */
 public class CommandExecuteException extends RuntimeException {
 
 	/**

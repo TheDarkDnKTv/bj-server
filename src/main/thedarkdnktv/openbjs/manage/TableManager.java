@@ -1,4 +1,4 @@
-package thedarkdnktv.openbjs.game;
+package thedarkdnktv.openbjs.manage;
 
 /**
  * 

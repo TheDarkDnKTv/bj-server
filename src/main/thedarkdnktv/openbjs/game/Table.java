@@ -40,35 +40,11 @@ public class Table {
 			this.boxes[i] = new Box();
 	}
 	
+	/**
+	 * Main update method
+	 */
 	public void update() {
 		
-	}
-	
-	public Box takeSeat(int idx) {
-		if (isBoxInRange(idx)) {
-			idx--;
-			if (boxes[idx].isFree()) {
-				return boxes[idx];
-			}
-		}
-		
-		return null;
-	}
-	
-	public boolean placeBet(int box, double bet) {
-		if (state == State.WAITING_FOR_BETS || state == State.BETTING_TIME) {
-			if (isBoxInRange(box)) {
-				Box b = boxes[--box];
-				if (b.bet == 0) {
-					b.bet = bet;
-					// TODO fire event
-					
-					return true;
-				}
-			}
-		}
-		
-		return false;
 	}
 	
 	/**
@@ -92,25 +68,17 @@ public class Table {
 	public static class Dealer extends Box {
 		
 		public Dealer() {
-			playerName = "Dealer";
+			
 		}
 	}
 	
 	public static class Box {
-		protected String playerName = null;
-		protected double bet = 0;
-		protected final List<? extends Card> cards = new ArrayList<>();
+		protected Player thePlayer;
 		
-		public void setDisplayName(String name) {
-			playerName = name;
-		}
 		
-		public List<? extends Card> getCards() {
-			return Collections.unmodifiableList(cards);
-		}
 		
 		public boolean isFree() {
-			return playerName == null && bet == 0 && cards.size() == 0;
+			return thePlayer == null;
 		}
 	}
 	
