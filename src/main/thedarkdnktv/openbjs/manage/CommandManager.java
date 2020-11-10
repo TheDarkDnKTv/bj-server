@@ -5,7 +5,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,7 +26,7 @@ import thedarkdnktv.openbjs.exception.CommandExecuteException;
  *
  */
 public class CommandManager implements Runnable {
-	private static final List<ICommand> commandRegistry = new ArrayList<>();
+	private static final Map<String ,ICommand> commandRegistry = new HashMap<>();
 	private static final Logger logger = LogManager.getLogger();
 	
 	private final List<String> pendingCommands = Collections.synchronizedList(new ArrayList<>());
@@ -73,31 +75,36 @@ public class CommandManager implements Runnable {
 				throw new CommandExecuteException("command: " + comName, e);
 			}
 		} else {
-			logger.error("Unknown command: " + comName);
+			if (comName.equals("?") || comName.equalsIgnoreCase("help")) {
+				StringBuffer buf = new StringBuffer();
+				buf.append("Next commands available: ");
+				commandRegistry.keySet().forEach(c -> buf.append(c + " "));
+				logger.info(buf.toString());
+			} else {
+				logger.error("Unknown command: " + comName);
+			}
 		}
 	}
 	
 	public ICommand findCommand(String name) {
 		Objects.requireNonNull(name, "Command name cannot be null");
-		ICommand command = null;
 		
 		if (!name.isEmpty()) {
-			for (ICommand com : commandRegistry) {
-				for (String n : com.getNames()) {
-					if (name.equals(n)) {
-						return com;
-					}
-				}
-			}
+			return commandRegistry.get(name);
 		} else {
 			throw new IllegalArgumentException("Command name cannot be empty");
 		}
-		
-		return command;
 	}
 	
 	private static void registerCommand(ICommand command) {
-		commandRegistry.add(command);
+		List<String> names = Arrays.asList(command.getNames());
+		if (!commandRegistry.keySet().containsAll(names)) {
+			for (String name : names) {
+				commandRegistry.put(name, command);
+			}
+		} else {
+			logger.error("Unable to register command " + names + ", some of name already registered");
+		}
 	}
 	
 	@Override

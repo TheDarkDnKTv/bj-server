@@ -1,8 +1,6 @@
 package thedarkdnktv.openbjs.command;
 
 import java.util.List;
-import java.util.function.Function;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -15,8 +13,6 @@ import thedarkdnktv.openbjs.game.Table;
  */
 public class CommandTable implements ICommand {
 	private static final Logger logger = LogManager.getLogger();
-	private static final Function<List<String>, Boolean> checkInt;
-	
 	
 	@Override
 	public String[] getNames() {
@@ -26,8 +22,9 @@ public class CommandTable implements ICommand {
 	@Override
 	public boolean isValidInput(List<String> properties) {
 		if (!properties.isEmpty()) {
-			SubCommand com = SubCommand.valueOf(properties.remove(0).toUpperCase());
-			return com != null && com.checkArgs.apply(properties);
+			try {
+				return null != SubCommand.valueOf(properties.remove(0).toUpperCase());
+			} catch (Throwable e) {}
 		}
 		
 		return false;
@@ -35,10 +32,14 @@ public class CommandTable implements ICommand {
 
 	@Override
 	public String getUsageString() {
-		return "Next arguments is available for this command:\n"
-				+ " * new <amount of boxes> creates new table\n"
-				+ " * stop <table id> removing table with id\n" // FIXME change commands
-				+ " * launch <table id> launching disabled table with id";
+		StringBuffer buf = new StringBuffer();
+		buf.append("Next sub commands available:\n");
+		
+		for (SubCommand com : SubCommand.values()) {
+			buf.append(String.format(" * %-8s %s\n", com.name().toLowerCase(), com.description));
+		}
+		
+		return buf.toString();
 	}
 
 	@Override
@@ -46,23 +47,35 @@ public class CommandTable implements ICommand {
 		SubCommand com = SubCommand.valueOf(properties.remove(0).toUpperCase());
 		switch (com) {
 		case NEW:
-			this.newTable(Integer.parseInt(properties.get(0)));
+			this.newTable(properties);
 			break;
-		case STOP:
-			this.removeTable(Integer.parseInt(properties.get(0)));
+		case REMOVE:
+			this.removeTable(properties);
 			break;
 		case LAUNCH:
-			this.launch(Integer.parseInt(properties.get(0)));
+			this.launch(properties);
+			break;
+		case STOP:
+			this.stop(properties);
+			break;
+		case STATUS:
+			this.status(properties);
 			break;
 		}
 	}
 	
-	private void newTable(int boxes) {
+	/*
+	 * Sub Executors
+	 */
+	
+	private void newTable(List<String> lines) {
+		int boxes = Integer.parseInt(lines.get(0));
 		int id = OpenBJS.INSTANCE.getTableManager().launchTable(new Table(boxes));
 		logger.info("New table successfully created with id " + id);
 	}
 	
-	private void removeTable(int id) {
+	private void removeTable(List<String> lines) {
+		int id = Integer.parseInt(lines.get(0));
 		if (OpenBJS.INSTANCE.getTableManager().removeTable(id)) {
 			logger.info("Table was removed successfully");
 		} else {
@@ -70,7 +83,8 @@ public class CommandTable implements ICommand {
 		}
 	}
 	
-	private void launch(int id) {
+	private void launch(List<String> lines) {
+		int id = Integer.parseInt(lines.get(0));
 		Table table = OpenBJS.INSTANCE.getTableManager().getTable(id);
 		if (table != null) {
 			table.launch();
@@ -78,15 +92,12 @@ public class CommandTable implements ICommand {
 		}
 	}
 	
-	static {
-		checkInt = args -> {
-			try {
-				Integer.parseInt(args.get(0));
-				return true;
-			} catch (Throwable e) {
-				return false;
-			}
-		};
+	private void stop(List<String> lines) {
+		// TODO
+	}
+	
+	private void status(List<String> lines) {
+		logger.info("Table status not implented yet");
 	}
 	
 	/**
@@ -95,14 +106,16 @@ public class CommandTable implements ICommand {
 	 *
 	 */
 	private static enum SubCommand {
-		NEW		(checkInt),
-		LAUNCH	(checkInt),
-		STOP	(checkInt);
+		NEW		("<boxes count[3-9]> creates new table on server"),
+		REMOVE	("<id> removes a table from server"),
+		LAUNCH	("<id> marks table as active"),
+		STOP	("<id> stop games on table"),
+		STATUS	("<id> show status of table");
 		
-		public final Function<List<String>, Boolean> checkArgs;
+		public String description;
 		
-		SubCommand(Function<List<String>, Boolean> argValidator) {
-			checkArgs = argValidator;
+		SubCommand(String desc) {
+			this.description = desc;
 		}
 	}
 }
