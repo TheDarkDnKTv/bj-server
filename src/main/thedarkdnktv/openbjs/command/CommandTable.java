@@ -97,7 +97,9 @@ public class CommandTable implements ICommand {
 	}
 	
 	private void status(List<String> lines) {
-		logger.info("Table status not implented yet");
+		int id = Integer.parseInt(lines.get(0));
+		Table table = OpenBJS.INSTANCE.getTableManager().getTable(id);
+		logger.info(table.getLobbyName() + " " + table.getState()); // TODO
 	}
 	
 	/**

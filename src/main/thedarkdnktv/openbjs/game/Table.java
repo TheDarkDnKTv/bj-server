@@ -2,7 +2,6 @@ package thedarkdnktv.openbjs.game;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -15,11 +14,14 @@ public class Table {
 	private static final Logger log = LogManager.getLogger();
 	
 	private final Box[] boxes;
-	private final Dealer dealer;
+	private final Hand dealerHand;
 	
 	private Shoe shoe;
 	private List<Card> holder;
 	private State state = State.DISABLED;
+	
+	private int ID = -1;
+	private String lobbyName = null;
 	
 	/** Betting time in milliseconds */
 	private int BETTING_TIME = 4000;
@@ -34,7 +36,7 @@ public class Table {
 			throw new IllegalArgumentException("Wrong boxes amount: " + boxes);
 		this.boxes = new Box[boxes];
 		this.shoe = new Shoe();
-		this.dealer = new Dealer();
+		this.dealerHand = new Hand();
 		this.holder = new ArrayList<>();
 		for (int i = 0; i < this.boxes.length; i++)
 			this.boxes[i] = new Box();
@@ -46,12 +48,22 @@ public class Table {
 	public void update() {
 		if (state != State.DISABLED) {
 			if (shoe.isNew()) {
-				log.info("Shoe is new, there is no cards. Proceed to create and shuffle");
+//				log.info("Shoe is new, there is no cards. Proceed to create and shuffle");
 			}
 			
 			
 		}
 	}
+	
+	public void launch() {
+		if (state == State.DISABLED) {
+			state = State.WAITING_FOR_BETS;
+		}
+	}
+	
+	/*
+	 * SETTERS
+	 */
 	
 	/**
 	 * Set a betting time timeout in milliseconds
@@ -67,10 +79,22 @@ public class Table {
 		return false;
 	}
 	
-	public void launch() {
-		if (state == State.DISABLED) {
-			state = State.WAITING_FOR_BETS;
+	public void setLobbyName(String newName) {
+		if (newName != null && !newName.isEmpty()) {
+			this.lobbyName = newName;
 		}
+	}
+	
+	public void setID(int id) {
+		this.ID = id;
+	}
+	
+	/*
+	 * GETTERS
+	 */
+	
+	public String getLobbyName() {
+		return lobbyName == null ? "Table#" + ID : lobbyName;
 	}
 	
 	public State getState() {
@@ -78,19 +102,8 @@ public class Table {
 	}
 
 	
-	
-	
-	public static class Dealer extends Box {
-		
-		public Dealer() {
-			
-		}
-	}
-	
 	public static class Box {
 		protected Player thePlayer;
-		
-		
 		
 		public boolean isFree() {
 			return thePlayer == null;

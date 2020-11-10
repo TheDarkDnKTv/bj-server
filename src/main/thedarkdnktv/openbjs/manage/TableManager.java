@@ -2,6 +2,7 @@ package thedarkdnktv.openbjs.manage;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import thedarkdnktv.openbjs.game.Table;
 import thedarkdnktv.openbjs.game.Table.State;
@@ -21,7 +22,12 @@ public class TableManager {
 	
 	public int launchTable(Table table) {
 		Objects.requireNonNull(table);
-		int id = gamingTables.size();
+		Entry<Integer, Table> entry = gamingTables.entrySet().stream()
+				.filter(e -> e.getValue() == null)
+				.findFirst()
+				.orElse(null);
+		int id = entry == null ? gamingTables.size() : entry.getKey().intValue();
+		table.setID(id);
 		gamingTables.put(id, table);
 		
 		return id;

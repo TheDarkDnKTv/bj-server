@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import thedarkdnktv.openbjs.api.API;
 import thedarkdnktv.openbjs.manage.CommandManager;
+import thedarkdnktv.openbjs.manage.PlayerManager;
 import thedarkdnktv.openbjs.manage.TableManager;
 import thedarkdnktv.openbjs.network.NetHandler;
 
@@ -28,6 +29,7 @@ public class OpenBJS implements Runnable {
 	
 	private CommandManager commandManager;
 	private TableManager tableManager;
+	private PlayerManager playerManager;
 	private boolean isRunning;
 	
 	private OpenBJS() {
@@ -99,6 +101,10 @@ public class OpenBJS implements Runnable {
 	
 	public TableManager getTableManager() {
 		return tableManager;
+	}
+	
+	public PlayerManager getPlayerManager() {
+		return playerManager;
 	}
 	
 	public boolean isRunning() {

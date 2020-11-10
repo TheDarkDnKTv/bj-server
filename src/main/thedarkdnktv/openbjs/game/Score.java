@@ -81,10 +81,19 @@ public class Score implements Comparable<Score>, Serializable {
 		return value;
 	}
 	
+	/*
+	 * this < o   ==> <0
+	 * this == o  ==> 0
+	 * this > o   ==> >0
+	 */
 	@Override
 	public int compareTo(Score o) {
-		// TODO Auto-generated method stub
-		return 0;
+		return this.bj && o.bj ? 0 :
+			this.bj && !o.bj ? 100 :
+			!this.bj && o.bj ? -100 :
+				o.tooMany && !this.tooMany ? 10 :
+				!o.tooMany && this.tooMany ? -10 :
+					o.value - this.value;
 	}
 	
 	@Override
