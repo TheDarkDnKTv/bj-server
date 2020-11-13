@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -17,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import thedarkdnktv.openbjs.api.annotation.Client;
+import thedarkdnktv.openbjs.api.network.IClient;
 
 /**
  * 
@@ -105,5 +107,25 @@ public class API {
 		return false;
 	}
 	
+	public static void setupLocalClients() {
+		Iterator<IClient> iter = REGISTRY.values().iterator();
+		while (iter.hasNext()) {
+			IClient cl = iter.next();
+//			cl.processConnection(handler);
+		}
+	}
 	
+	public static void runClients() {
+		Iterator<IClient> iter = REGISTRY.values().iterator();
+		for (int i = 0; iter.hasNext(); i++) {
+			IClient client = iter.next();
+			Thread clThread = new Thread(() -> {
+				while (true) {
+					client.tick(); // TODO
+				}
+			}, "Client#" + i);
+			clThread.setDaemon(true);
+			clThread.start();
+		}
+	}
 }

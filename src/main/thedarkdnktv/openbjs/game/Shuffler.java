@@ -23,7 +23,7 @@ import com.google.gson.JsonPrimitive;
 import thedarkdnktv.openbjs.OpenBJS;
 import thedarkdnktv.openbjs.exception.ShoeNotValidException;
 import thedarkdnktv.openbjs.exception.WrongShuffleException;
-import thedarkdnktv.openbjs.network.NetHandler;
+import thedarkdnktv.openbjs.util.NetworkUtils;
 
 /**
  * Provides all functionallity related with shuffler work:<br>
@@ -64,10 +64,10 @@ public class Shuffler {
 				obj.add("id", new JsonPrimitive(0));
 				obj.add("params", params);
 				
-				byte[] data = OpenBJS.net.post(NetHandler.from("https://api.random.org/json-rpc/1/invoke"), "application/json", obj.toString().getBytes(StandardCharsets.UTF_8));
+				byte[] data = NetworkUtils.post(NetworkUtils.from("https://api.random.org/json-rpc/1/invoke"), "application/json", obj.toString().getBytes(StandardCharsets.UTF_8));
 				
 				try {
-					JsonObject answer = OpenBJS.net.parseToJson(data);
+					JsonObject answer = NetworkUtils.parseToJson(data);
 					long seed = answer.get("result").getAsJsonObject().get("random").getAsJsonObject().get("data").getAsJsonArray().get(0).getAsLong();
 	        		logger.info("Random seed: " + seed);
 	        		random = new Random(seed);
