@@ -14,5 +14,4 @@ public interface IClient extends INetHandler {
 	
 	public void handle(Packet<?> data);
 	
-	public void processConnection(IActionHandler handler);
 }

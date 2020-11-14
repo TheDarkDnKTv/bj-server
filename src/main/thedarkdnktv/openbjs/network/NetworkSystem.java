@@ -40,6 +40,7 @@ public class NetworkSystem {
 	public static final LazyLoadBase<NioEventLoopGroup> SERVER_NIO_EVENTLOOP;
 	public static final LazyLoadBase<EpollEventLoopGroup> SERVER_EPOLL_EVENTLOOP;
 	public static final LazyLoadBase<DefaultEventLoopGroup> SERVER_LOCAL_EVENTLOOP;
+	public static final int PROTOCOL_VERSION = 100;
 	
 	private final OpenBJS server;
 	private final List<ChannelFuture> endpoints = Collections.<ChannelFuture>synchronizedList(new ArrayList<ChannelFuture>());
@@ -54,9 +55,9 @@ public class NetworkSystem {
 	
 	public void networkTick() {
 		synchronized (this.networkManagers) {
-			for (NetworkManager manager : this.networkManagers) {
+//			for (NetworkManager manager : this.networkManagers) {
 				// TODO process packets
-			}
+//			}
 		}
 	}
 	
@@ -83,7 +84,7 @@ public class NetworkSystem {
 					} catch (ChannelException e) {}
 					
 					ch.pipeline().addLast("timeout", new ReadTimeoutHandler(30)); // TODO add a ping handler
-					NetworkManager manager = new NetworkManager();
+					NetworkManager manager = new NetworkManager(PacketDirection.SERVERBOUND);
 					NetworkSystem.this.networkManagers.add(manager);
 					ch.pipeline().addLast("packet_handler", manager);
 //					manager.setNetHandler(handler); // TODO handler

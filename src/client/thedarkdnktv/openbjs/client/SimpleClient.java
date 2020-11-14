@@ -1,7 +1,6 @@
 package thedarkdnktv.openbjs.client;
 
 import thedarkdnktv.openbjs.api.annotation.Client;
-import thedarkdnktv.openbjs.api.network.IActionHandler;
 import thedarkdnktv.openbjs.api.network.IClient;
 import thedarkdnktv.openbjs.api.network.Packet;
 
@@ -25,12 +24,6 @@ public class SimpleClient implements IClient {
 	
 	@Override
 	public void handle(Packet<?> data) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void processConnection(IActionHandler handler) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -1,7 +1,11 @@
 package thedarkdnktv.openbjs;
 
+import java.io.IOException;
+
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import thedarkdnktv.openbjs.api.API;
 import thedarkdnktv.openbjs.manage.CommandManager;
@@ -40,13 +44,14 @@ public class OpenBJS implements Runnable {
 	}
 	
 	public static void main(String[] args) throws Throwable {
+		// Disable netty logging
+		Configurator.setLevel("io.netty", Level.WARN);
+		
 		API.init();
 		CommandManager.init();
 		new Thread(INSTANCE = new OpenBJS(), "Server Thread").start();
 		API.setupLocalClients();
 		API.runClients();
-		
-		
 	}
 	
 	public static int ceil(double value) {
@@ -56,6 +61,13 @@ public class OpenBJS implements Runnable {
 	@Override
 	public void run() {
 		logger.info("Starting OpenBJS Server");
+		try {
+			this.getNetworkSystem().addEndpoint(null, 100); // TODO
+		} catch (IOException e) {
+			logger.error("**** FAILED TO BIND TO PORT!");
+			logger.error("Excpetion was: {}", e.toString());
+			return;
+		}
 		
 		try {
 //			long time = System.currentTimeMillis();
@@ -90,6 +102,9 @@ public class OpenBJS implements Runnable {
 	public void stop() {
 		logger.info("Stopping the server...");
 		this.isRunning = false;
+		if (this.getNetworkSystem() != null) {
+			this.getNetworkSystem().terminateEndpoints();
+		}
 	}
 	
 	public TableManager getTableManager() {

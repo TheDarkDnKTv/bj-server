@@ -12,8 +12,14 @@
             </Policies>
         </RollingRandomAccessFile>
     </Appenders>
+    
+    <Category name="io.netty">
+    	<priority value="trace" />
+	</Category>
+    
     <Loggers>
-        <Root level="all">
+        <Root level="trace">
+
             <AppenderRef ref="SysOut" level="all"/>
             <AppenderRef ref="File"/>
         </Root>

@@ -64,7 +64,7 @@ public class Table {
 	
 	public void notifyUpdate() {
 		for (Box box : boxes) {
-			box.thePlayer.getHandler().sendData(null); // TODO
+			// TODO
 		}
 	}
 	
