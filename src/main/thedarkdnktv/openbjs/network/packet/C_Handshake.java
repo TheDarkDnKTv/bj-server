@@ -4,14 +4,14 @@ import java.io.IOException;
 
 import thedarkdnktv.openbjs.api.network.Packet;
 import thedarkdnktv.openbjs.network.ConnectionState;
-import thedarkdnktv.openbjs.network.handlers.INetHandlerHandshakeServer;
+import thedarkdnktv.openbjs.network.handlers.interfaces.IHandshakeServer;
 import thedarkdnktv.openbjs.util.PacketBuf;
 
 /**
  * @author TheDarkDnKTv
  *
  */
-public class C_Handshake implements Packet<INetHandlerHandshakeServer> {
+public class C_Handshake implements Packet<IHandshakeServer> {
 	
 	private int protocolVersion;
 	private String ip;
@@ -35,7 +35,7 @@ public class C_Handshake implements Packet<INetHandlerHandshakeServer> {
 	}
 
 	@Override
-	public void processPacket(INetHandlerHandshakeServer handler) {
+	public void processPacket(IHandshakeServer handler) {
 		handler.processHandshake(this);
 	}
 	

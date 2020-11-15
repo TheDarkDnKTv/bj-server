@@ -4,13 +4,15 @@ import thedarkdnktv.openbjs.OpenBJS;
 import thedarkdnktv.openbjs.manage.NetworkManager;
 import thedarkdnktv.openbjs.network.ConnectionState;
 import thedarkdnktv.openbjs.network.NetworkSystem;
+import thedarkdnktv.openbjs.network.handlers.interfaces.IHandshakeServer;
 import thedarkdnktv.openbjs.network.packet.C_Handshake;
+import thedarkdnktv.openbjs.network.packet.S_Disconnect;
 
 /**
  * @author TheDarkDnKTv
  *
  */
-public class HandshakeTCP implements INetHandlerHandshakeServer {
+public class HandshakeTCP implements IHandshakeServer {
 	private final OpenBJS server;
 	private final NetworkManager networkManager;
 	
@@ -28,20 +30,20 @@ public class HandshakeTCP implements INetHandlerHandshakeServer {
 			
 			if (packetIn.getProtocolVerion() < NetworkSystem.PROTOCOL_VERSION) {
 				String err = "Outdated client version";
-//				networkManager.sendPacket(packet);
+				networkManager.sendPacket(new S_Disconnect(err));
 				networkManager.closeChannel(err);
 			} else if (packetIn.getProtocolVerion() > NetworkSystem.PROTOCOL_VERSION) {
 				String err = "Outdated server version";
-//				networkManager.sendPacket(packet); // TODO disconnect packet
+				networkManager.sendPacket(new S_Disconnect(err));
 				networkManager.closeChannel(err);
 			} else {
-//				networkManager.setNetHandler(handler); // login handler
+//				networkManager.setNetHandler(handler); // TODO login handler
 			}
 			
 			break;
 		case STATUS:
 			networkManager.setConnectionState(ConnectionState.STATUS);
-//			networkManager.setNetHandler(handler); // ServerStatus handler
+			networkManager.setNetHandler(new StatusServer(server, networkManager));
 			break;
 		default:
 			throw new UnsupportedOperationException("Invalid intention " + packetIn.getRequestedState());
