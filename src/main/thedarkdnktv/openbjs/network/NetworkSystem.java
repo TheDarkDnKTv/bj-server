@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,9 +26,24 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import thedarkdnktv.openbjs.OpenBJS;
-import thedarkdnktv.openbjs.manage.NetworkManager;
-import thedarkdnktv.openbjs.util.ThreadFactoryBuilder;
+import thedarkdnktv.openbjs.api.network.NetworkHandler;
+import thedarkdnktv.openbjs.api.network.base.LazyLoadBase;
+import thedarkdnktv.openbjs.api.network.base.PacketDirection;
+import thedarkdnktv.openbjs.api.network.code.PacketDecoder;
+import thedarkdnktv.openbjs.api.network.code.VarIntFrameDecoder;
+import thedarkdnktv.openbjs.api.util.ThreadFactoryBuilder;
+import thedarkdnktv.openbjs.network.handlers.HandshakeTCP;
+import thedarkdnktv.openbjs.network.packet.C_Handshake;
+import thedarkdnktv.openbjs.network.packet.C_Ping;
+import thedarkdnktv.openbjs.network.packet.C_ServerQuery;
+import thedarkdnktv.openbjs.network.packet.S_Disconnect;
+import thedarkdnktv.openbjs.network.packet.S_Pong;
+import thedarkdnktv.openbjs.network.packet.S_ServerQuery;
+
+import static thedarkdnktv.openbjs.api.network.base.ConnectionState.*;
 
 /**
  * 
@@ -44,7 +60,7 @@ public class NetworkSystem {
 	
 	private final OpenBJS server;
 	private final List<ChannelFuture> endpoints = Collections.<ChannelFuture>synchronizedList(new ArrayList<ChannelFuture>());
-	private final List<NetworkManager> networkManagers = Collections.<NetworkManager>synchronizedList(new ArrayList<NetworkManager>());
+	private final List<NetworkHandler> networkManagers = Collections.<NetworkHandler>synchronizedList(new ArrayList<NetworkHandler>());
 	
 	public volatile boolean isAlive;
 	
@@ -55,9 +71,28 @@ public class NetworkSystem {
 	
 	public void networkTick() {
 		synchronized (this.networkManagers) {
-//			for (NetworkManager manager : this.networkManagers) {
-				// TODO process packets
-//			}
+			Iterator<NetworkHandler> iter = this.networkManagers.iterator();
+			
+			while (iter.hasNext()) {
+				final NetworkHandler manager = iter.next();
+				if (!manager.hasNoChannel() && manager.isChannelOpen()) {
+					try {
+						manager.processReceivedPackets();
+					} catch (Throwable e) {
+						logger.warn("Failed to handle packet for {}", manager.getRemoteAddress(), e);
+						manager.sendPacket(new S_Disconnect("Internal server error"), new GenericFutureListener<Future<? super Void>>() {
+							@Override
+							public void operationComplete(Future<? super Void> future) throws Exception {
+								manager.closeChannel("Internal server error");
+							}
+						});
+						manager.disableAutoRead();
+					}
+				} else {
+					iter.remove();
+					manager.handleDisconnection();
+				}
+			}
 		}
 	}
 	
@@ -83,11 +118,11 @@ public class NetworkSystem {
 						ch.config().setOption(ChannelOption.TCP_NODELAY, Boolean.TRUE);
 					} catch (ChannelException e) {}
 					
-					ch.pipeline().addLast("timeout", new ReadTimeoutHandler(30)); // TODO add a ping handler
-					NetworkManager manager = new NetworkManager(PacketDirection.SERVERBOUND);
+					ch.pipeline().addLast("timeout", new ReadTimeoutHandler(30)).addLast("splitter", new VarIntFrameDecoder()).addLast("decoder", new PacketDecoder(PacketDirection.SERVERBOUND)); // TODO add a ping handler
+					NetworkHandler manager = new NetworkHandler(PacketDirection.SERVERBOUND);
 					NetworkSystem.this.networkManagers.add(manager);
 					ch.pipeline().addLast("packet_handler", manager);
-//					manager.setNetHandler(handler); // TODO handler
+					manager.setNetHandler(new HandshakeTCP(server, manager));
 				}
 			});
 			
@@ -126,5 +161,14 @@ public class NetworkSystem {
 				return new DefaultEventLoopGroup(0, new ThreadFactoryBuilder().setDeamon(true).setNameFormat("Netty Local Server IO #%d").build());
 			}
 		};
+		
+		HANDSHAKING	.registerPacket(PacketDirection.SERVERBOUND, C_Handshake.class);
+		
+		STATUS		.registerPacket(PacketDirection.SERVERBOUND, C_Ping.class);
+		STATUS		.registerPacket(PacketDirection.CLIENTBOUND, S_Pong.class);
+		STATUS		.registerPacket(PacketDirection.SERVERBOUND, C_ServerQuery.class);
+		STATUS		.registerPacket(PacketDirection.CLIENTBOUND, S_ServerQuery.class);
+		
+		LOGIN		.registerPacket(PacketDirection.CLIENTBOUND, S_Disconnect.class);
 	}
 }

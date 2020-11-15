@@ -1,4 +1,4 @@
-package thedarkdnktv.openbjs.util;
+package thedarkdnktv.openbjs.api.util;
 
 import java.io.IOException;
 import java.io.InputStream;

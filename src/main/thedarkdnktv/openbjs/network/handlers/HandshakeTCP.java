@@ -1,8 +1,8 @@
 package thedarkdnktv.openbjs.network.handlers;
 
 import thedarkdnktv.openbjs.OpenBJS;
-import thedarkdnktv.openbjs.manage.NetworkManager;
-import thedarkdnktv.openbjs.network.ConnectionState;
+import thedarkdnktv.openbjs.api.network.NetworkHandler;
+import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.network.NetworkSystem;
 import thedarkdnktv.openbjs.network.handlers.interfaces.IHandshakeServer;
 import thedarkdnktv.openbjs.network.packet.C_Handshake;
@@ -14,9 +14,9 @@ import thedarkdnktv.openbjs.network.packet.S_Disconnect;
  */
 public class HandshakeTCP implements IHandshakeServer {
 	private final OpenBJS server;
-	private final NetworkManager networkManager;
+	private final NetworkHandler networkManager;
 	
-	public HandshakeTCP(OpenBJS serverIn, NetworkManager netManager) {
+	public HandshakeTCP(OpenBJS serverIn, NetworkHandler netManager) {
 		this.server = serverIn;
 		this.networkManager = netManager;
 	}

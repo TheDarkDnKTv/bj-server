@@ -1,4 +1,4 @@
-package thedarkdnktv.openbjs.network;
+package thedarkdnktv.openbjs.api.network.base;
 
 public abstract class LazyLoadBase<T> {
 	private T value;

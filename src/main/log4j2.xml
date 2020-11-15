@@ -3,6 +3,16 @@
     <Appenders>
         <Console name="SysOut" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n" />
+            <Filters>
+       			<ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+        		<ThresholdFilter level="fatal" onMatch="DENY"  onMismatch="NEUTRAL"/>
+           </Filters>
+        </Console>
+        <Console name="SysErr" target="SYSTEM_ERR">
+            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n" />
+            <Filters>
+       			<ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+           </Filters>
         </Console>
         <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n" />
@@ -12,15 +22,10 @@
             </Policies>
         </RollingRandomAccessFile>
     </Appenders>
-    
-    <Category name="io.netty">
-    	<priority value="trace" />
-	</Category>
-    
     <Loggers>
-        <Root level="trace">
-
-            <AppenderRef ref="SysOut" level="all"/>
+        <Root level="ALL">
+            <AppenderRef ref="SysErr"/>
+            <AppenderRef ref="SysOut"/>
             <AppenderRef ref="File"/>
         </Root>
     </Loggers>

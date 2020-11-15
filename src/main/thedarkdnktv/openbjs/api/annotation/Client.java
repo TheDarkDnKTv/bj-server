@@ -7,8 +7,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import thedarkdnktv.openbjs.api.API;
-
 /**
  * 
  * @author TheDarkDnKTv <br>
@@ -22,6 +20,6 @@ import thedarkdnktv.openbjs.api.API;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Client {
-	String version() default API.Version;
+	String versionAPI();
 	String clientId();
 }

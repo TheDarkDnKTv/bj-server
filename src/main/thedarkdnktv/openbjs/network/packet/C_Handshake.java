@@ -3,9 +3,9 @@ package thedarkdnktv.openbjs.network.packet;
 import java.io.IOException;
 
 import thedarkdnktv.openbjs.api.network.Packet;
-import thedarkdnktv.openbjs.network.ConnectionState;
+import thedarkdnktv.openbjs.api.network.base.ConnectionState;
+import thedarkdnktv.openbjs.api.util.PacketBuf;
 import thedarkdnktv.openbjs.network.handlers.interfaces.IHandshakeServer;
-import thedarkdnktv.openbjs.util.PacketBuf;
 
 /**
  * @author TheDarkDnKTv

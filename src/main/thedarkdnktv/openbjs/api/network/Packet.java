@@ -2,7 +2,8 @@ package thedarkdnktv.openbjs.api.network;
 
 import java.io.IOException;
 
-import thedarkdnktv.openbjs.util.PacketBuf;
+import thedarkdnktv.openbjs.api.network.base.INetHandler;
+import thedarkdnktv.openbjs.api.util.PacketBuf;
 
 /**
  * @author TheDarkDnKTv

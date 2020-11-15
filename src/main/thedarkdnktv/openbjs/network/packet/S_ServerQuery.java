@@ -3,8 +3,8 @@ package thedarkdnktv.openbjs.network.packet;
 import java.io.IOException;
 
 import thedarkdnktv.openbjs.api.network.Packet;
+import thedarkdnktv.openbjs.api.util.PacketBuf;
 import thedarkdnktv.openbjs.network.handlers.interfaces.IStatusClient;
-import thedarkdnktv.openbjs.util.PacketBuf;
 
 /**
  * @author TheDarkDnKTv

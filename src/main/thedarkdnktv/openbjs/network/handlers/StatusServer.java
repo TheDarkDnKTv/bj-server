@@ -1,7 +1,7 @@
 package thedarkdnktv.openbjs.network.handlers;
 
 import thedarkdnktv.openbjs.OpenBJS;
-import thedarkdnktv.openbjs.manage.NetworkManager;
+import thedarkdnktv.openbjs.api.network.NetworkHandler;
 import thedarkdnktv.openbjs.manage.TableManager;
 import thedarkdnktv.openbjs.network.handlers.interfaces.IStatusServer;
 import thedarkdnktv.openbjs.network.packet.C_Ping;
@@ -13,10 +13,10 @@ public class StatusServer implements IStatusServer {
 	
 	private static final String EXIT_MESSAGE = "Status request has been handled";
 	private final OpenBJS server;
-	private final NetworkManager networkManager;
+	private final NetworkHandler networkManager;
 	private boolean handled;
 	
-	public StatusServer(OpenBJS server, NetworkManager manager) {
+	public StatusServer(OpenBJS server, NetworkHandler manager) {
 		this.server = server;
 		this.networkManager = manager;
 		this.handled = false;

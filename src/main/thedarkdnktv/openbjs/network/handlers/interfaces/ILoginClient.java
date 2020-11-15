@@ -1,6 +1,6 @@
 package thedarkdnktv.openbjs.network.handlers.interfaces;
 
-import thedarkdnktv.openbjs.api.network.INetHandler;
+import thedarkdnktv.openbjs.api.network.base.INetHandler;
 import thedarkdnktv.openbjs.network.packet.S_Disconnect;
 
 /**

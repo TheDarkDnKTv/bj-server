@@ -1,4 +1,7 @@
-package thedarkdnktv.openbjs.api.network;
+package thedarkdnktv.openbjs.api.interfaces;
+
+import thedarkdnktv.openbjs.api.network.Packet;
+import thedarkdnktv.openbjs.api.network.base.INetHandler;
 
 /**
  * To implement a API-based client please use this interface with 

@@ -1,4 +1,4 @@
-package thedarkdnktv.openbjs.api.network;
+package thedarkdnktv.openbjs.api.network.base;
 
 /**
  * @author TheDarkDnKTv

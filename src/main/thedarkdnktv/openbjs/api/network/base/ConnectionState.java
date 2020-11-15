@@ -1,4 +1,4 @@
-package thedarkdnktv.openbjs.network;
+package thedarkdnktv.openbjs.api.network.base;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -14,11 +14,7 @@ import thedarkdnktv.openbjs.api.network.Packet;
  *
  */
 public enum ConnectionState {
-	HANDSHAKING(-1) {
-		{
-//			registerPacket(PacketDirection.SERVERBOUND, packetClass);
-		}
-	},
+	HANDSHAKING(-1),
 	STATUS(0),
 	LOGIN(1),
 	PLAY(2);

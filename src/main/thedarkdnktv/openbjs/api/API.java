@@ -7,10 +7,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
@@ -18,7 +18,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import thedarkdnktv.openbjs.api.annotation.Client;
-import thedarkdnktv.openbjs.api.network.IClient;
+import thedarkdnktv.openbjs.api.interfaces.IServer;
+import thedarkdnktv.openbjs.api.interfaces.ITickable;
+import thedarkdnktv.openbjs.api.util.ThreadFactoryBuilder;
 
 /**
  * 
@@ -26,10 +28,17 @@ import thedarkdnktv.openbjs.api.network.IClient;
  *
  */
 public class API {
-	public static final String Version = "1.0.0";
+	public static final String VERSION = "1.2.1";
 	
-	private static final Map<String, IClient> REGISTRY = new HashMap<>();
-	private static final Logger logger = LogManager.getLogger();
+	private static final Logger logger;
+	private static final Map<String, Object> REGISTRY;
+	private static final Map<String, ITickable> TICKABLES;
+	
+	static {
+		logger = LogManager.getLogger();
+		REGISTRY = new HashMap<>();
+		TICKABLES = new HashMap<>();
+	}
 	
 	public static void init() {
 		URLClassLoader cloader = (URLClassLoader) API.class.getClassLoader();
@@ -67,15 +76,13 @@ public class API {
 		}
 		
 		for (Class<?> cl : clients) {
-			if (IClient.class.isAssignableFrom(cl)) {
-				try {
-					IClient instance = IClient.class.cast(cl.newInstance());
-					String id = cl.getAnnotation(Client.class).clientId();
-					API.addClient(id, instance);
-				} catch (Throwable e) {
-					logger.error("Failed to initialize client " + cl.toString());
-					logger.catching(e);
-				}
+			try {
+				Object instance = cl.newInstance();
+				String id = cl.getAnnotation(Client.class).clientId();
+				API.addClient(id, instance);
+			} catch (Throwable e) {
+				logger.error("Failed to initialize client " + cl.toString());
+				logger.catching(e);
 			}
 		}
 		
@@ -87,11 +94,13 @@ public class API {
 	}
 	
 	
-	public static boolean addClient(String clientId, IClient client) {
+	public static boolean addClient(String clientId, Object client) {
 		Objects.requireNonNull(clientId);
 		Objects.requireNonNull(client);
 		if (!clientId.isEmpty() && !REGISTRY.containsKey(clientId)) {
 			REGISTRY.put(clientId, client);
+			if (client instanceof ITickable)
+				TICKABLES.put(clientId, (ITickable)client);
 			return true;
 		}
 		
@@ -107,25 +116,19 @@ public class API {
 		return false;
 	}
 	
-	public static void setupLocalClients() {
-		Iterator<IClient> iter = REGISTRY.values().iterator();
-		while (iter.hasNext()) {
-			IClient cl = iter.next();
-//			cl.processConnection(handler);
-		}
-	}
-	
-	public static void runClients() {
-		Iterator<IClient> iter = REGISTRY.values().iterator();
-		for (int i = 0; iter.hasNext(); i++) {
-			IClient client = iter.next();
-			Thread clThread = new Thread(() -> {
-				while (true) {
-					client.tick(); // TODO
+	public static void runClients(IServer server) {
+		ThreadFactory factory = new ThreadFactoryBuilder()
+				.setNameFormat("Client#%d")
+				.setUncaughtExceptionHandler(server.getExceptionHandler())
+				.setDeamon(true)
+				.build();
+		
+		for (ITickable cl : TICKABLES.values()) {
+			factory.newThread(() -> {
+				while(server.isRunning()) {
+					cl.update();
 				}
-			}, "Client#" + i);
-			clThread.setDaemon(true);
-			clThread.start();
+			}).start();
 		}
 	}
 }

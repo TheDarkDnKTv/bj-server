@@ -1,10 +1,11 @@
-package thedarkdnktv.openbjs.manage;
+package thedarkdnktv.openbjs.api.network;
 
 import java.net.SocketAddress;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -20,15 +21,14 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-import thedarkdnktv.openbjs.api.network.INetHandler;
-import thedarkdnktv.openbjs.api.network.Packet;
-import thedarkdnktv.openbjs.network.ConnectionState;
-import thedarkdnktv.openbjs.network.PacketDirection;
-import thedarkdnktv.openbjs.util.ITickable;
+import thedarkdnktv.openbjs.api.interfaces.ITickable;
+import thedarkdnktv.openbjs.api.network.base.ConnectionState;
+import thedarkdnktv.openbjs.api.network.base.INetHandler;
+import thedarkdnktv.openbjs.api.network.base.PacketDirection;
 
-public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
+public class NetworkHandler extends SimpleChannelInboundHandler<Packet<?>> {
 	
-	private static final Logger logger = LogManager.getLogger();
+	protected static final Logger logger = LogManager.getLogger();
 	public static final Marker NETWORK_MARKER = MarkerManager.getMarker("NETWORK");
 	public static final AttributeKey<ConnectionState> PROTOCOL_ATTRIBUTE_KEY = AttributeKey.<ConnectionState>valueOf("protocol");
 	
@@ -37,22 +37,29 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 	private final Queue<PacketEntry> outboundPacketsQueue = new ConcurrentLinkedQueue<>();
 	private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	
-	private INetHandler handler;
-	private Channel channel;
-	private SocketAddress socketAddress;
+	protected INetHandler handler;
+	protected Channel channel;
+	protected SocketAddress socketAddress;
 	
-	private String terminationReason;
-	private boolean disconnected;
+	protected String terminationReason;
+	protected boolean disconnected;
 	
-	public NetworkManager(PacketDirection dir) {
+	public NetworkHandler(PacketDirection dir) {
 		this.disconnected = false;
 		this.direction = dir;
 	}
 
+	
 	@Override
+	@SuppressWarnings("unchecked")
 	protected void channelRead0(ChannelHandlerContext ctx, Packet<?> msg) throws Exception {
-		// TODO Auto-generated method stub
-		
+		if (this.channel.isOpen()) {
+			try {
+				((Packet<INetHandler>) msg).processPacket(this.handler);
+			} catch (Throwable e) {
+				logger.catching(Level.DEBUG, e);
+			}
+		}
 	}
 	
 	@Override
@@ -105,7 +112,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 		}
 	}
 	
-	private void flushOutboundQueue() {
+	protected void flushOutboundQueue() {
 		if (isChannelOpen()) {
 			this.readWriteLock.readLock().lock();
 			try {
@@ -119,7 +126,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 		}
 	}
 	
-	private void dispatchPacket(final Packet<?> packet, final GenericFutureListener<? extends Future<? super Void>>[] futureListeners) {
+	protected void dispatchPacket(final Packet<?> packet, final GenericFutureListener<? extends Future<? super Void>>[] futureListeners) {
 		ConnectionState state = ConnectionState.getFromPacket(packet);
 		ConnectionState state1 = this.channel.attr(PROTOCOL_ATTRIBUTE_KEY).get();
 		
@@ -145,9 +152,9 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 				@Override
 				public void run() {
 					if (state != state1) {
-						NetworkManager.this.setConnectionState(state);
+						NetworkHandler.this.setConnectionState(state);
 						
-						ChannelFuture chFuture = NetworkManager.this.channel.writeAndFlush(packet);
+						ChannelFuture chFuture = NetworkHandler.this.channel.writeAndFlush(packet);
 						
 						if (chFuture != null) {
 							chFuture.addListeners(futureListeners);
@@ -224,7 +231,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet<?>> {
 		}
 	}
 	
-	static class PacketEntry {
+	protected static class PacketEntry {
 		public final Packet<?> packet;
 		public final GenericFutureListener<? extends Future<? super Void>>[] futureListeners;
 		

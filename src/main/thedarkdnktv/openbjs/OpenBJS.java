@@ -1,6 +1,7 @@
 package thedarkdnktv.openbjs;
 
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -8,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
 import thedarkdnktv.openbjs.api.API;
+import thedarkdnktv.openbjs.api.interfaces.IServer;
 import thedarkdnktv.openbjs.manage.CommandManager;
 import thedarkdnktv.openbjs.manage.TableManager;
 import thedarkdnktv.openbjs.network.NetworkSystem;
@@ -16,18 +18,21 @@ import thedarkdnktv.openbjs.network.NetworkSystem;
  * @author TheDarkDnKTv
  *
  */
-public class OpenBJS implements Runnable {
+public class OpenBJS implements IServer {
+	private static final Logger logger = LogManager.getLogger();
+	private static final UncaughtExceptionHandler HANDLER;
+	
+	/* Misc settings */
 	public static final boolean DEBUG = true;
 	public static final String RANDOMORG_API_KEY = "7b57e9cc-6ebe-4c05-9456-a47e4e02ac62";
 	
+	/* Main Server settings */
 	public static final int DECK_SIZE = 52;
 	public static final int DECKS = 8;
 	public static final int CARDS = DECKS * DECK_SIZE;
 	public static final int TICK_PERIOD = 100;
 	
 	public static OpenBJS INSTANCE;
-	
-	private static Logger logger = LogManager.getLogger();
 	
 	private CommandManager commandManager;
 	private TableManager tableManager;
@@ -44,14 +49,28 @@ public class OpenBJS implements Runnable {
 	}
 	
 	public static void main(String[] args) throws Throwable {
+		Thread.currentThread().setName("Server Bootstrap");
 		// Disable netty logging
 		Configurator.setLevel("io.netty", Level.WARN);
 		
-		API.init();
+		
 		CommandManager.init();
+		new Thread(API::init, "Server Bootstrap");
 		new Thread(INSTANCE = new OpenBJS(), "Server Thread").start();
-		API.setupLocalClients();
-		API.runClients();
+		API.init();
+		API.runClients(INSTANCE);
+	}
+	
+	static {
+		HANDLER = new UncaughtExceptionHandler() {
+			private Logger log = LogManager.getLogger("CrashReporter");
+			
+			@Override
+			public void uncaughtException(Thread t, Throwable e) {
+				log.error("Exception occured in thread " + t.getName());
+				log.catching(e);
+			}
+		};
 	}
 	
 	public static int ceil(double value) {
@@ -62,7 +81,7 @@ public class OpenBJS implements Runnable {
 	public void run() {
 		logger.info("Starting OpenBJS Server");
 		try {
-			this.getNetworkSystem().addEndpoint(null, 100); // TODO
+			this.getNetworkSystem().addEndpoint(null, 100); // TODO port & ip
 		} catch (IOException e) {
 			logger.error("**** FAILED TO BIND TO PORT!");
 			logger.error("Excpetion was: {}", e.toString());
@@ -99,14 +118,6 @@ public class OpenBJS implements Runnable {
 		networkSystem.networkTick();
 	}
 	
-	public void stop() {
-		logger.info("Stopping the server...");
-		this.isRunning = false;
-		if (this.getNetworkSystem() != null) {
-			this.getNetworkSystem().terminateEndpoints();
-		}
-	}
-	
 	public TableManager getTableManager() {
 		return tableManager;
 	}
@@ -115,6 +126,21 @@ public class OpenBJS implements Runnable {
 		return networkSystem;
 	}
 	
+	@Override
+	public void stop() {
+		logger.info("Stopping the server...");
+		this.isRunning = false;
+		if (this.getNetworkSystem() != null) {
+			this.getNetworkSystem().terminateEndpoints();
+		}
+	}
+	
+	@Override
+	public UncaughtExceptionHandler getExceptionHandler() {
+		return HANDLER;
+	}
+	
+	@Override
 	public boolean isRunning() {
 		return this.isRunning;
 	}
