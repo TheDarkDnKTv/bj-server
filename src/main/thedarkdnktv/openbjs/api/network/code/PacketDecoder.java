@@ -47,9 +47,7 @@ public class PacketDecoder extends ByteToMessageDecoder {
 					throw new IOException("Packet was bigger than expecting!");
 				} else {
 					out.add(packet);
-					if (LOGGER.isDebugEnabled()) {
-						LOGGER.debug(RECEIVED_PACKET_MARKER, " IN: [{}:{}] {}", ctx.channel().attr(NetworkHandler.PROTOCOL_ATTRIBUTE_KEY).get(), new Integer(varInt), packet.getClass().getName());
-					}
+					LOGGER.debug(RECEIVED_PACKET_MARKER, " IN: [{}:{}] {}", ctx.channel().attr(NetworkHandler.PROTOCOL_ATTRIBUTE_KEY).get(), new Integer(varInt), packet.getClass().getName());
 				}
 			}
 		}

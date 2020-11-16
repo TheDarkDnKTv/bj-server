@@ -69,7 +69,7 @@ public class NetworkHandler extends SimpleChannelInboundHandler<Packet<?>> {
 		this.socketAddress = this.channel.remoteAddress();
 		
 		try {
-			
+			this.setConnectionState(ConnectionState.HANDSHAKING);
 		} catch (Throwable e) {
 			logger.fatal(e);
 		}

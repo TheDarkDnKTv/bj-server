@@ -30,10 +30,13 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import thedarkdnktv.openbjs.OpenBJS;
 import thedarkdnktv.openbjs.api.network.NetworkHandler;
+import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.api.network.base.LazyLoadBase;
 import thedarkdnktv.openbjs.api.network.base.PacketDirection;
 import thedarkdnktv.openbjs.api.network.code.PacketDecoder;
+import thedarkdnktv.openbjs.api.network.code.PacketEncoder;
 import thedarkdnktv.openbjs.api.network.code.VarIntFrameDecoder;
+import thedarkdnktv.openbjs.api.network.code.VarIntFrameEncoder;
 import thedarkdnktv.openbjs.api.util.ThreadFactoryBuilder;
 import thedarkdnktv.openbjs.network.handlers.HandshakeTCP;
 import thedarkdnktv.openbjs.network.packet.C_Handshake;
@@ -118,7 +121,12 @@ public class NetworkSystem {
 						ch.config().setOption(ChannelOption.TCP_NODELAY, Boolean.TRUE);
 					} catch (ChannelException e) {}
 					
-					ch.pipeline().addLast("timeout", new ReadTimeoutHandler(30)).addLast("splitter", new VarIntFrameDecoder()).addLast("decoder", new PacketDecoder(PacketDirection.SERVERBOUND)); // TODO add a ping handler
+					ch.pipeline()
+						.addLast("timeout", new ReadTimeoutHandler(30))
+						.addLast("splitter", new VarIntFrameDecoder())
+						.addLast("decoder", new PacketDecoder(PacketDirection.SERVERBOUND))
+						.addLast("prepender", new VarIntFrameEncoder())
+						.addLast("encoder", new PacketEncoder(PacketDirection.CLIENTBOUND));
 					NetworkHandler manager = new NetworkHandler(PacketDirection.SERVERBOUND);
 					NetworkSystem.this.networkManagers.add(manager);
 					ch.pipeline().addLast("packet_handler", manager);
@@ -170,5 +178,7 @@ public class NetworkSystem {
 		STATUS		.registerPacket(PacketDirection.CLIENTBOUND, S_ServerQuery.class);
 		
 		LOGIN		.registerPacket(PacketDirection.CLIENTBOUND, S_Disconnect.class);
+		
+		ConnectionState.registerPackets();
 	}
 }

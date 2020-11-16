@@ -5,6 +5,7 @@ import java.io.IOException;
 import thedarkdnktv.openbjs.api.network.Packet;
 import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.api.util.PacketBuf;
+import thedarkdnktv.openbjs.network.NetworkSystem;
 import thedarkdnktv.openbjs.network.handlers.interfaces.IHandshakeServer;
 
 /**
@@ -17,6 +18,15 @@ public class C_Handshake implements Packet<IHandshakeServer> {
 	private String ip;
 	private int port;
 	private ConnectionState requestedState;
+	
+	public C_Handshake() {}
+
+	public C_Handshake(String ip, int port, ConnectionState state) {
+		this.ip = ip;
+		this.port = port;
+		this.requestedState = state;
+		this.protocolVersion = NetworkSystem.PROTOCOL_VERSION;
+	}
 	
 	@Override
 	public void writePacketData(PacketBuf buffer) throws IOException {

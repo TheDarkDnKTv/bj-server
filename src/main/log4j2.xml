@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" packages="thedarkdnktv.openbjs">
+<Configuration status="ERROR" packages="thedarkdnktv.openbjs">
     <Appenders>
         <Console name="SysOut" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n" />
@@ -23,10 +23,13 @@
         </RollingRandomAccessFile>
     </Appenders>
     <Loggers>
-        <Root level="ALL">
-            <AppenderRef ref="SysErr"/>
+    	<Logger name="thedarkdnktv.openbjs" level="ALL">
+    		<AppenderRef ref="SysErr"/>
             <AppenderRef ref="SysOut"/>
             <AppenderRef ref="File"/>
+    	</Logger>
+        <Root level="DEBUG">
+        	<AppenderRef ref="SysErr"/>
         </Root>
     </Loggers>
 </Configuration>

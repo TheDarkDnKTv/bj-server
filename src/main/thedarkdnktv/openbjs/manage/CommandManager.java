@@ -54,9 +54,7 @@ public class CommandManager implements Runnable {
 				this.processCommand(new ArrayList<>(Arrays.asList(command.split(" "))));
 			} catch (CommandExecuteException e) {
 				logger.info("Exception occured trying execute command - '" + e.getMessage() + "'");
-				if (logger.isDebugEnabled()) {
-					logger.catching(e);
-				}
+				logger.catching(e);
 			}
 		}
 	}

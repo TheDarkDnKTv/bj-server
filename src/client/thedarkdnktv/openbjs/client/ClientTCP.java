@@ -1,26 +1,20 @@
 package thedarkdnktv.openbjs.client;
 
-import java.io.IOException;
 import java.net.InetAddress;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelException;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import thedarkdnktv.openbjs.api.API;
 import thedarkdnktv.openbjs.api.annotation.Client;
 import thedarkdnktv.openbjs.api.interfaces.ITickable;
-import thedarkdnktv.openbjs.api.network.base.LazyLoadBase;
+import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.client.network.NetHandlerClient;
+import thedarkdnktv.openbjs.network.handlers.interfaces.IStatusClient;
+import thedarkdnktv.openbjs.network.packet.C_Handshake;
+import thedarkdnktv.openbjs.network.packet.C_ServerQuery;
+import thedarkdnktv.openbjs.network.packet.S_Pong;
+import thedarkdnktv.openbjs.network.packet.S_ServerQuery;
 
 /**
  * 
@@ -42,12 +36,29 @@ public class ClientTCP implements ITickable {
 	 *  So it is like init method.
 	 */
 	public ClientTCP() {
-		handler = new NetHandlerClient();
-		
-		
 		try {
 			handler = NetHandlerClient.createAndConnect(InetAddress.getLocalHost(), 100);
-//			handler.sendPacket(packet);
+			handler.setNetHandler(new IStatusClient() {
+				
+				
+				@Override
+				public void onDisconnection(String reason) {
+					handler.closeChannel(reason);
+				}
+				
+				@Override
+				public void handleServerQuery(S_ServerQuery packet) {
+					logger.info(packet.getMessage());
+				}
+				
+				@Override
+				public void handlePong(S_Pong packet) {
+					logger.info("PONG");
+				}
+			});
+			
+			handler.sendPacket(new C_Handshake(InetAddress.getLocalHost().getHostAddress(), 100, ConnectionState.STATUS));
+			handler.sendPacket(new C_ServerQuery());
 		} catch (Throwable e) {
 			logger.catching(e);
 		}
@@ -57,7 +68,14 @@ public class ClientTCP implements ITickable {
 
 	@Override
 	public void update() {
-		
-		
+		if (handler != null) {
+			if (!handler.hasNoChannel() && handler.isChannelOpen()) {
+				handler.processReceivedPackets();
+			} else {
+				handler.handleDisconnection();
+				logger.warn("Disconnected");
+				handler = null;
+			}
+		}
 	}
 }

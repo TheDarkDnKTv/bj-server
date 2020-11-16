@@ -19,6 +19,10 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import thedarkdnktv.openbjs.api.network.NetworkHandler;
 import thedarkdnktv.openbjs.api.network.base.LazyLoadBase;
 import thedarkdnktv.openbjs.api.network.base.PacketDirection;
+import thedarkdnktv.openbjs.api.network.code.PacketDecoder;
+import thedarkdnktv.openbjs.api.network.code.PacketEncoder;
+import thedarkdnktv.openbjs.api.network.code.VarIntFrameDecoder;
+import thedarkdnktv.openbjs.api.network.code.VarIntFrameEncoder;
 import thedarkdnktv.openbjs.api.util.ThreadFactoryBuilder;
 
 /**
@@ -55,11 +59,17 @@ public class NetHandlerClient extends NetworkHandler {
 					ch.config().setOption(ChannelOption.TCP_NODELAY, Boolean.TRUE);
 				} catch (ChannelException e) {}
 				
-				ch.pipeline().addLast("timeout", new ReadTimeoutHandler(30)).addLast("packet_handler", manager); // TODO pipeline
+				ch.pipeline()
+					.addLast("timeout", new ReadTimeoutHandler(30))
+					.addLast("splitter", new VarIntFrameDecoder())
+					.addLast("decoder", new PacketDecoder(PacketDirection.CLIENTBOUND))
+					.addLast("pretender", new VarIntFrameEncoder())
+					.addLast("encoder", new PacketEncoder(PacketDirection.SERVERBOUND))
+					.addLast("packet_handler", manager);
 			}
 		});
 		
-		boot.connect(InetAddress.getLocalHost(), 100).syncUninterruptibly(); // TODO ip & address
+		boot.connect(address, port).syncUninterruptibly(); // TODO ip & address
 		
 		return manager;
 	}

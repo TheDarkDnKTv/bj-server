@@ -30,7 +30,7 @@ public class VarIntFrameDecoder extends ByteToMessageDecoder {
 			
 			// Check is we have next byte presenting lenght
 			if (bytes[i] >= 0) {
-				PacketBuf pBuf = new PacketBuf(Unpooled.wrappedBuffer(buf));
+				PacketBuf pBuf = new PacketBuf(Unpooled.wrappedBuffer(bytes));
 				
 				try {
 					int varInt = pBuf.readVarInt();

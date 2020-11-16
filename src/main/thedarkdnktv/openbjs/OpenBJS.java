@@ -2,6 +2,7 @@ package thedarkdnktv.openbjs;
 
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.net.InetAddress;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -50,13 +51,16 @@ public class OpenBJS implements IServer {
 	
 	public static void main(String[] args) throws Throwable {
 		Thread.currentThread().setName("Server Bootstrap");
+		
 		// Disable netty logging
 		Configurator.setLevel("io.netty", Level.WARN);
 		
-		
 		CommandManager.init();
-		new Thread(API::init, "Server Bootstrap");
 		new Thread(INSTANCE = new OpenBJS(), "Server Thread").start();
+		
+		while (INSTANCE == null || !INSTANCE.isRunning)
+			Thread.sleep(50);
+		
 		API.init();
 		API.runClients(INSTANCE);
 	}
@@ -80,8 +84,9 @@ public class OpenBJS implements IServer {
 	@Override
 	public void run() {
 		logger.info("Starting OpenBJS Server");
+		
 		try {
-			this.getNetworkSystem().addEndpoint(null, 100); // TODO port & ip
+			this.getNetworkSystem().addEndpoint(InetAddress.getLocalHost(), 100); // TODO port & ip
 		} catch (IOException e) {
 			logger.error("**** FAILED TO BIND TO PORT!");
 			logger.error("Excpetion was: {}", e.toString());

@@ -34,4 +34,8 @@ public class S_ServerQuery implements Packet<IStatusClient>  {
 	public void processPacket(IStatusClient handler) {
 		handler.handleServerQuery(this);
 	}
+	
+	public String getMessage() {
+		return message;
+	}
 }

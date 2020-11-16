@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 
 import org.apache.logging.log4j.LogManager;
 
+import com.sun.media.jfxmedia.logging.Logger;
+
 import thedarkdnktv.openbjs.api.network.Packet;
 
 /**
@@ -33,27 +35,6 @@ public enum ConnectionState {
 	static {
 		STATES_BY_ID = new ConnectionState[4];
 		STATES_BY_CLASS = new HashMap<>();
-		
-		for (ConnectionState state : values()) {
-			int id = state.getId();
-			
-			STATES_BY_ID[id - -1] = state;
-			for (PacketDirection dir : state.directionMaps.keySet()) {
-				for (Class<? extends Packet<?>> pClass : state.directionMaps.get(dir).values()) {
-					if (STATES_BY_CLASS.containsKey(pClass) && STATES_BY_CLASS.get(pClass) != state) {
-						throw new Error("Packet " + pClass + " is already assigned to protocol " + STATES_BY_CLASS.get(pClass));
-					}
-					
-					try {
-						pClass.newInstance();
-					} catch (Throwable e) {
-						throw new Error("Packet" + pClass + " failed instatiation check", e);
-					}
-					
-					STATES_BY_CLASS.put(pClass, state);
-				}
-			}
-		}
 	}
 	
 	public Integer getPacketId(PacketDirection dir, Packet<?> packetIn) throws Exception {
@@ -99,6 +80,32 @@ public enum ConnectionState {
 		} else {
 			map.put(Integer.valueOf(map.size()), packetClass);
 			return this;
+		}
+	}
+	
+	public static void registerPackets() {
+		for (ConnectionState state : values()) {
+			int id = state.getId();
+			
+			STATES_BY_ID[id - -1] = state;
+			for (PacketDirection dir : state.directionMaps.keySet()) {
+				for (Class<? extends Packet<?>> pClass : state.directionMaps.get(dir).values()) {
+					if (STATES_BY_CLASS.containsKey(pClass) && STATES_BY_CLASS.get(pClass) != state) {
+						throw new Error("Packet " + pClass + " is already assigned to protocol " + STATES_BY_CLASS.get(pClass));
+					}
+					
+					try {
+						pClass.newInstance();
+					} catch (Throwable e) {
+						throw new Error("Packet" + pClass + " failed instatiation check", e);
+					}
+					
+					STATES_BY_CLASS.put(pClass, state);
+				}
+				System.out.println(state.directionMaps);
+			}
+			
+			
 		}
 	}
 }
