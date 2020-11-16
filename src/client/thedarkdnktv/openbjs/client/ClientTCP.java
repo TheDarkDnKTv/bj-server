@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import thedarkdnktv.openbjs.api.API;
 import thedarkdnktv.openbjs.api.annotation.Client;
+import thedarkdnktv.openbjs.api.interfaces.IInitializable;
 import thedarkdnktv.openbjs.api.interfaces.ITickable;
 import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.client.network.NetHandlerClient;
@@ -22,7 +23,7 @@ import thedarkdnktv.openbjs.network.packet.S_ServerQuery;
  *
  */
 @Client(clientId = ClientTCP.ID, versionAPI = API.VERSION)
-public class ClientTCP implements ITickable {
+public class ClientTCP implements ITickable, IInitializable {
 	
 	public static final String ID = "TestClient";
 	
@@ -35,7 +36,23 @@ public class ClientTCP implements ITickable {
 	 *  it making instance of this class. <br>
 	 *  So it is like init method.
 	 */
-	public ClientTCP() {
+	public ClientTCP() {}
+
+	@Override
+	public void update() {
+		if (handler != null) {
+			if (!handler.hasNoChannel() && handler.isChannelOpen()) {
+				handler.processReceivedPackets();
+			} else {
+				handler.handleDisconnection();
+				logger.warn("Disconnected");
+				handler = null;
+			}
+		}
+	}
+	
+	@Override
+	public void init() {
 		try {
 			handler = NetHandlerClient.createAndConnect(InetAddress.getLocalHost(), 100);
 			handler.setNetHandler(new IStatusClient() {
@@ -58,24 +75,11 @@ public class ClientTCP implements ITickable {
 			});
 			
 			handler.sendPacket(new C_Handshake(InetAddress.getLocalHost().getHostAddress(), 100, ConnectionState.STATUS));
-			handler.sendPacket(new C_ServerQuery());
+//			handler.sendPacket(new C_ServerQuery());
 		} catch (Throwable e) {
 			logger.catching(e);
 		}
 		
 		logger.info("TCP Client successfully initialized");
-	}
-
-	@Override
-	public void update() {
-		if (handler != null) {
-			if (!handler.hasNoChannel() && handler.isChannelOpen()) {
-				handler.processReceivedPackets();
-			} else {
-				handler.handleDisconnection();
-				logger.warn("Disconnected");
-				handler = null;
-			}
-		}
 	}
 }

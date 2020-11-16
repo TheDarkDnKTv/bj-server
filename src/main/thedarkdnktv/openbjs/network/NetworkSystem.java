@@ -130,7 +130,9 @@ public class NetworkSystem {
 					NetworkHandler manager = new NetworkHandler(PacketDirection.SERVERBOUND);
 					NetworkSystem.this.networkManagers.add(manager);
 					ch.pipeline().addLast("packet_handler", manager);
-					manager.setNetHandler(new HandshakeTCP(server, manager));
+					manager.setNetHandler(new HandshakeTCP(NetworkSystem.this.server, manager));
+					
+					NetworkSystem.logger.debug("Connection from " + ch.remoteAddress().toString());
 				}
 			});
 			

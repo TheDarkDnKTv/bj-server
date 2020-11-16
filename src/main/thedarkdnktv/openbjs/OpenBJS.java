@@ -62,7 +62,6 @@ public class OpenBJS implements IServer {
 			Thread.sleep(50);
 		
 		API.init();
-		API.runClients(INSTANCE);
 	}
 	
 	static {
@@ -92,6 +91,9 @@ public class OpenBJS implements IServer {
 			logger.error("Excpetion was: {}", e.toString());
 			return;
 		}
+		
+		API.initClients();
+		API.runClients(INSTANCE);
 		
 		try {
 //			long time = System.currentTimeMillis();

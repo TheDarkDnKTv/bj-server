@@ -13,6 +13,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import thedarkdnktv.openbjs.api.network.NetworkHandler;
 import thedarkdnktv.openbjs.api.network.Packet;
+import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.api.network.base.PacketDirection;
 import thedarkdnktv.openbjs.api.util.PacketBuf;
 
@@ -36,7 +37,9 @@ public class PacketDecoder extends ByteToMessageDecoder {
 		if (in.readableBytes() != 0) {
 			PacketBuf buf = new PacketBuf(in);
 			int varInt = buf.readVarInt();
-			Packet<?> packet = ctx.channel().attr(NetworkHandler.PROTOCOL_ATTRIBUTE_KEY).get().getPacket(direction, varInt);
+			ConnectionState state = ctx.channel().attr(NetworkHandler.PROTOCOL_ATTRIBUTE_KEY).get();
+			LOGGER.debug(state);
+			Packet<?> packet = state.getPacket(direction, varInt);
 			
 			if (packet == null) {
 				throw new IOException("Bad packet id: " + varInt);

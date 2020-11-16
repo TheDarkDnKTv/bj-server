@@ -84,11 +84,13 @@ public enum ConnectionState {
 	}
 	
 	public static void registerPackets() {
-		for (ConnectionState state : values()) {
+		for (ConnectionState state : values()) { // HANDSHAKE, LOGIN, STATUS, PLAY
 			int id = state.getId();
 			
+			System.out.println(state);
+			
 			STATES_BY_ID[id - -1] = state;
-			for (PacketDirection dir : state.directionMaps.keySet()) {
+			for (PacketDirection dir : state.directionMaps.keySet()) { // SERVERBOUND, CLIENTBOUND
 				for (Class<? extends Packet<?>> pClass : state.directionMaps.get(dir).values()) {
 					if (STATES_BY_CLASS.containsKey(pClass) && STATES_BY_CLASS.get(pClass) != state) {
 						throw new Error("Packet " + pClass + " is already assigned to protocol " + STATES_BY_CLASS.get(pClass));

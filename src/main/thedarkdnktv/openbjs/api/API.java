@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
@@ -18,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import thedarkdnktv.openbjs.api.annotation.Client;
+import thedarkdnktv.openbjs.api.interfaces.IInitializable;
 import thedarkdnktv.openbjs.api.interfaces.IServer;
 import thedarkdnktv.openbjs.api.interfaces.ITickable;
 import thedarkdnktv.openbjs.api.util.ThreadFactoryBuilder;
@@ -114,6 +116,18 @@ public class API {
 		}
 		
 		return false;
+	}
+	
+	public static void initClients() {
+		for (Entry<String, ITickable> entry : TICKABLES.entrySet()) {
+			if (entry.getValue() instanceof IInitializable) {
+				try {
+					((IInitializable) entry.getValue()).init();
+				} catch (Throwable e) {
+					logger.error("Init error of %s %s", entry.getKey(), e);
+				}
+			}
+		}
 	}
 	
 	public static void runClients(IServer server) {
