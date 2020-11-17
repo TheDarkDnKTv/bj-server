@@ -17,16 +17,20 @@ public class S_Pong implements Packet<IStatusClient> {
 
 	@Override
 	public void writePacketData(PacketBuf buf) throws IOException {
-		this.clientTime = buf.readLong();
+		buf.writeLong(this.clientTime);
 	}
 
 	@Override
 	public void readPacketData(PacketBuf buf) throws IOException {
-		buf.writeLong(this.clientTime);
+		this.clientTime = buf.readLong();
 	}
 
 	@Override
 	public void processPacket(IStatusClient handler) {
 		handler.handlePong(this);
+	}
+	
+	public long getClientTime() {
+		return clientTime;
 	}
 }

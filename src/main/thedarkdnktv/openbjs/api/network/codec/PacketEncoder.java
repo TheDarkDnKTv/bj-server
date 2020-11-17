@@ -46,7 +46,7 @@ public class PacketEncoder extends MessageToByteEncoder<Packet<?>> {
 				pBuf.writeVarInt(integer.intValue());
 				
 				try {
-					packet.writePacketData(pBuf);
+					packet.writePacketData(pBuf); 
 				} catch (Throwable e) {
 					LOGGER.error(e);
 				}

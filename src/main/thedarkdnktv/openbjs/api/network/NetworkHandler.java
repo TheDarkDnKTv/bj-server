@@ -177,9 +177,9 @@ public class NetworkHandler extends SimpleChannelInboundHandler<Packet<?>> {
 	}
 	
 	public void closeChannel(String message) {
-		if (this.isChannelOpen()) {
-			this.channel.close().awaitUninterruptibly();
+		if (this.channel.isOpen()) {
 			this.terminationReason = message;
+			this.channel.close().awaitUninterruptibly();
 		}
 	}
 	
@@ -208,7 +208,7 @@ public class NetworkHandler extends SimpleChannelInboundHandler<Packet<?>> {
 	}
 	
 	public void handleDisconnection() {
-		if (isChannelOpen()) {
+		if (this.channel != null && !this.channel.isOpen()) {
 			if (this.disconnected) {
 				logger.warn("handleDisconnection() called twice");
 			} else {

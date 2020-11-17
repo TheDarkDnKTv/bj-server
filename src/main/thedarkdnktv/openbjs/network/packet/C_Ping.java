@@ -14,14 +14,21 @@ public class C_Ping implements Packet<IStatusServer> {
 	
 	private long clientTime;
 	
+	public C_Ping() {
+	}
+	
+	public C_Ping(long time) {
+		clientTime = time;
+	}
+	
 	@Override
 	public void writePacketData(PacketBuf buf) throws IOException {
-		this.clientTime = buf.readLong();
+		buf.writeLong(this.clientTime);
 	}
 
 	@Override
 	public void readPacketData(PacketBuf buf) throws IOException {
-		buf.writeLong(this.clientTime);
+		this.clientTime = buf.readLong();
 	}
 
 	@Override

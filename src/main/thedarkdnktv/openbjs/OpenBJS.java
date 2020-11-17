@@ -28,7 +28,7 @@ public class OpenBJS implements IServer {
 	
 	/* Misc settings */
 	public static final boolean DEBUG = true;
-	public static final boolean NET_DEBUG = false;
+	public static final boolean NET_DEBUG = true;
 	public static final String RANDOMORG_API_KEY = "7b57e9cc-6ebe-4c05-9456-a47e4e02ac62";
 	
 	/* Main Server settings */

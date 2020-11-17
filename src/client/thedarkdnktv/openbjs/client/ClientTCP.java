@@ -13,6 +13,7 @@ import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.client.network.NetHandlerClient;
 import thedarkdnktv.openbjs.network.handlers.interfaces.IStatusClient;
 import thedarkdnktv.openbjs.network.packet.C_Handshake;
+import thedarkdnktv.openbjs.network.packet.C_Ping;
 import thedarkdnktv.openbjs.network.packet.C_ServerQuery;
 import thedarkdnktv.openbjs.network.packet.S_Pong;
 import thedarkdnktv.openbjs.network.packet.S_ServerQuery;
@@ -41,10 +42,9 @@ public class ClientTCP implements ITickable, IInitializable {
 	@Override
 	public void update() {
 		if (handler != null) {
-			if (!handler.hasNoChannel() && handler.isChannelOpen()) {
+			if (handler.isChannelOpen()) {
 				handler.processReceivedPackets();
 			} else {
-				logger.error("DEBUG DISCONNECT");
 				handler.handleDisconnection();
 				handler = null;
 			}
@@ -56,26 +56,25 @@ public class ClientTCP implements ITickable, IInitializable {
 		try {
 			handler = NetHandlerClient.createAndConnect(InetAddress.getLocalHost(), 100);
 			handler.setNetHandler(new IStatusClient() {
-				
-				
 				@Override
 				public void onDisconnection(String reason) {
-					ClientTCP.logger.info("Disconnected: " + reason);
 				}
 				
 				@Override
 				public void handleServerQuery(S_ServerQuery packet) {
 					ClientTCP.logger.info(packet.getMessage());
-					ClientTCP.this.handler.closeChannel("Status recieved");
+//					ClientTCP.this.handler.closeChannel("Status recieved");
 				}
 				
 				@Override
 				public void handlePong(S_Pong packet) {
-					ClientTCP.logger.info("PONG");
+					long time = System.currentTimeMillis();
+					ClientTCP.logger.info("PONG for " + ((long) time - packet.getClientTime()) + "ms");
 				}
 			});
 			
 			handler.sendPacket(new C_Handshake(InetAddress.getLocalHost().getHostAddress(), 100, ConnectionState.STATUS));
+			handler.sendPacket(new C_Ping(System.currentTimeMillis()));
 			handler.sendPacket(new C_ServerQuery());
 		} catch (Throwable e) {
 			logger.catching(e);
