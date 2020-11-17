@@ -75,7 +75,7 @@ public class ClientTCP implements ITickable, IInitializable {
 			});
 			
 			handler.sendPacket(new C_Handshake(InetAddress.getLocalHost().getHostAddress(), 100, ConnectionState.STATUS));
-//			handler.sendPacket(new C_ServerQuery());
+			handler.sendPacket(new C_ServerQuery());
 		} catch (Throwable e) {
 			logger.catching(e);
 		}

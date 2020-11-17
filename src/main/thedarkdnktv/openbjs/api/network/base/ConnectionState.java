@@ -7,8 +7,6 @@ import java.util.Map.Entry;
 
 import org.apache.logging.log4j.LogManager;
 
-import com.sun.media.jfxmedia.logging.Logger;
-
 import thedarkdnktv.openbjs.api.network.Packet;
 
 /**
@@ -87,8 +85,6 @@ public enum ConnectionState {
 		for (ConnectionState state : values()) { // HANDSHAKE, LOGIN, STATUS, PLAY
 			int id = state.getId();
 			
-			System.out.println(state);
-			
 			STATES_BY_ID[id - -1] = state;
 			for (PacketDirection dir : state.directionMaps.keySet()) { // SERVERBOUND, CLIENTBOUND
 				for (Class<? extends Packet<?>> pClass : state.directionMaps.get(dir).values()) {
@@ -104,7 +100,6 @@ public enum ConnectionState {
 					
 					STATES_BY_CLASS.put(pClass, state);
 				}
-				System.out.println(state.directionMaps);
 			}
 			
 			

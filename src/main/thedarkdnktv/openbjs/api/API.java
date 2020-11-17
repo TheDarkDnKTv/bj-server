@@ -36,10 +36,20 @@ public class API {
 	private static final Map<String, Object> REGISTRY;
 	private static final Map<String, ITickable> TICKABLES;
 	
+	public static final boolean DEBUG;
+	
 	static {
 		logger = LogManager.getLogger();
 		REGISTRY = new HashMap<>();
 		TICKABLES = new HashMap<>();
+		
+		boolean debug = false;
+		
+		try {
+			debug = Class.forName("thedarkdnktv.openbjs.OpenBJS").getField("DEBUG").getBoolean(null);
+		} catch(Throwable e) {}
+		
+		DEBUG = debug;
 	}
 	
 	public static void init() {

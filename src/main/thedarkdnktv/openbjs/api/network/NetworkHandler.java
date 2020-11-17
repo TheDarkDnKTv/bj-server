@@ -11,16 +11,16 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
-import com.sun.corba.se.impl.orbutil.threadpool.TimeoutException;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.TimeoutException;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import thedarkdnktv.openbjs.api.API;
 import thedarkdnktv.openbjs.api.interfaces.ITickable;
 import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.api.network.base.INetHandler;
@@ -131,7 +131,7 @@ public class NetworkHandler extends SimpleChannelInboundHandler<Packet<?>> {
 		ConnectionState state1 = this.channel.attr(PROTOCOL_ATTRIBUTE_KEY).get();
 		
 		if (state != state1) {
-			logger.debug("Disabled auto read");
+			if (API.DEBUG) logger.debug("Disabled auto read");
 			this.channel.config().setAutoRead(false);
 		}
 		
@@ -153,15 +153,15 @@ public class NetworkHandler extends SimpleChannelInboundHandler<Packet<?>> {
 				public void run() {
 					if (state != state1) {
 						NetworkHandler.this.setConnectionState(state);
-						
-						ChannelFuture chFuture = NetworkHandler.this.channel.writeAndFlush(packet);
-						
-						if (chFuture != null) {
-							chFuture.addListeners(futureListeners);
-						}
-						
-						chFuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 					}
+					
+					ChannelFuture chFuture = NetworkHandler.this.channel.writeAndFlush(packet);
+					
+					if (chFuture != null) {
+						chFuture.addListeners(futureListeners);
+					}
+					
+					chFuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 				}
 			});
 		}
@@ -181,7 +181,7 @@ public class NetworkHandler extends SimpleChannelInboundHandler<Packet<?>> {
 	public void setConnectionState(ConnectionState newState) {
 		this.channel.attr(PROTOCOL_ATTRIBUTE_KEY).set(newState);
 		this.channel.config().setAutoRead(true);
-		logger.debug("Enabled auto read");
+		if (API.DEBUG) logger.debug("Enabled auto read cause of state " + newState);
 	}
 	
 	public SocketAddress getRemoteAddress() {

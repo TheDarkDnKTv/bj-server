@@ -44,7 +44,7 @@ public class NetHandlerClient extends NetworkHandler {
 		LazyLoadBase<? extends EventLoopGroup> loadBase;
 		Class<? extends SocketChannel> channel;
 		
-		if (Epoll.isAvailable()) {
+		if (Epoll.isAvailable()) { // TODO EPOl config
 			loadBase = NetHandlerClient.CLIENT_EPOLL_EVENTLOOP;
 			channel = EpollSocketChannel.class;
 		} else {
