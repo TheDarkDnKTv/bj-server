@@ -19,10 +19,10 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import thedarkdnktv.openbjs.api.network.NetworkHandler;
 import thedarkdnktv.openbjs.api.network.base.LazyLoadBase;
 import thedarkdnktv.openbjs.api.network.base.PacketDirection;
-import thedarkdnktv.openbjs.api.network.code.PacketDecoder;
-import thedarkdnktv.openbjs.api.network.code.PacketEncoder;
-import thedarkdnktv.openbjs.api.network.code.VarIntFrameDecoder;
-import thedarkdnktv.openbjs.api.network.code.VarIntFrameEncoder;
+import thedarkdnktv.openbjs.api.network.codec.PacketDecoder;
+import thedarkdnktv.openbjs.api.network.codec.PacketEncoder;
+import thedarkdnktv.openbjs.api.network.codec.VarIntFrameDecoder;
+import thedarkdnktv.openbjs.api.network.codec.VarIntFrameEncoder;
 import thedarkdnktv.openbjs.api.util.ThreadFactoryBuilder;
 
 /**

@@ -44,8 +44,8 @@ public class ClientTCP implements ITickable, IInitializable {
 			if (!handler.hasNoChannel() && handler.isChannelOpen()) {
 				handler.processReceivedPackets();
 			} else {
+				logger.error("DEBUG DISCONNECT");
 				handler.handleDisconnection();
-				logger.warn("Disconnected");
 				handler = null;
 			}
 		}
@@ -60,17 +60,18 @@ public class ClientTCP implements ITickable, IInitializable {
 				
 				@Override
 				public void onDisconnection(String reason) {
-					handler.closeChannel(reason);
+					ClientTCP.logger.info("Disconnected: " + reason);
 				}
 				
 				@Override
 				public void handleServerQuery(S_ServerQuery packet) {
-					logger.info(packet.getMessage());
+					ClientTCP.logger.info(packet.getMessage());
+					ClientTCP.this.handler.closeChannel("Status recieved");
 				}
 				
 				@Override
 				public void handlePong(S_Pong packet) {
-					logger.info("PONG");
+					ClientTCP.logger.info("PONG");
 				}
 			});
 			

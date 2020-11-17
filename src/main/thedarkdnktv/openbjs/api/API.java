@@ -17,7 +17,6 @@ import java.util.zip.ZipFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import thedarkdnktv.openbjs.api.annotation.Client;
 import thedarkdnktv.openbjs.api.interfaces.IInitializable;
 import thedarkdnktv.openbjs.api.interfaces.IServer;
@@ -37,19 +36,23 @@ public class API {
 	private static final Map<String, ITickable> TICKABLES;
 	
 	public static final boolean DEBUG;
+	public static final boolean NETWORK_DEBUG;
 	
 	static {
 		logger = LogManager.getLogger();
 		REGISTRY = new HashMap<>();
 		TICKABLES = new HashMap<>();
 		
-		boolean debug = false;
+		boolean debug = false, net_debug = false;
 		
 		try {
-			debug = Class.forName("thedarkdnktv.openbjs.OpenBJS").getField("DEBUG").getBoolean(null);
+			Class<?> openbjs = Class.forName("thedarkdnktv.openbjs.OpenBJS");
+			debug = openbjs.getField("DEBUG").getBoolean(null);
+			net_debug = openbjs.getField("NET_DEBUG").getBoolean(null);
 		} catch(Throwable e) {}
 		
 		DEBUG = debug;
+		NETWORK_DEBUG = net_debug; // TODO load from config
 	}
 	
 	public static void init() {
@@ -104,7 +107,6 @@ public class API {
 			logger.info("No API-based clients was found");
 		}
 	}
-	
 	
 	public static boolean addClient(String clientId, Object client) {
 		Objects.requireNonNull(clientId);

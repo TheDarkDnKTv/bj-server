@@ -1,4 +1,4 @@
-package thedarkdnktv.openbjs.api.network.code;
+package thedarkdnktv.openbjs.api.network.codec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;

@@ -20,7 +20,6 @@ import io.netty.handler.timeout.TimeoutException;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-import thedarkdnktv.openbjs.api.API;
 import thedarkdnktv.openbjs.api.interfaces.ITickable;
 import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.api.network.base.INetHandler;
@@ -131,39 +130,28 @@ public class NetworkHandler extends SimpleChannelInboundHandler<Packet<?>> {
 		ConnectionState state1 = this.channel.attr(PROTOCOL_ATTRIBUTE_KEY).get();
 		
 		if (state != state1) {
-			if (API.DEBUG) logger.debug("Disabled auto read");
+			logger.debug(NETWORK_MARKER, "Disabled auto read");
 			this.channel.config().setAutoRead(false);
 		}
 		
-		if (this.channel.eventLoop().inEventLoop()) {
+		Runnable sent = () -> {
 			if (state != state1) {
-				this.setConnectionState(state);
+				NetworkHandler.this.setConnectionState(state);
 			}
 			
-			ChannelFuture chFuture = this.channel.writeAndFlush(packet);
+			ChannelFuture chFuture = NetworkHandler.this.channel.writeAndFlush(packet);
 			
 			if (chFuture != null) {
 				chFuture.addListeners(futureListeners);
 			}
 			
 			chFuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+		};
+		
+		if (this.channel.eventLoop().inEventLoop()) {
+			sent.run();
 		} else {
-			this.channel.eventLoop().execute(new Runnable() {
-				@Override
-				public void run() {
-					if (state != state1) {
-						NetworkHandler.this.setConnectionState(state);
-					}
-					
-					ChannelFuture chFuture = NetworkHandler.this.channel.writeAndFlush(packet);
-					
-					if (chFuture != null) {
-						chFuture.addListeners(futureListeners);
-					}
-					
-					chFuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
-				}
-			});
+			this.channel.eventLoop().execute(sent);
 		}
 	}
 	
@@ -181,7 +169,7 @@ public class NetworkHandler extends SimpleChannelInboundHandler<Packet<?>> {
 	public void setConnectionState(ConnectionState newState) {
 		this.channel.attr(PROTOCOL_ATTRIBUTE_KEY).set(newState);
 		this.channel.config().setAutoRead(true);
-		if (API.DEBUG) logger.debug("Enabled auto read cause of state " + newState);
+		logger.debug(NETWORK_MARKER, "Enabled auto read cause of state " + newState);
 	}
 	
 	public SocketAddress getRemoteAddress() {

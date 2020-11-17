@@ -8,6 +8,9 @@
         		<ThresholdFilter level="fatal" onMatch="DENY"  onMismatch="NEUTRAL"/>
            </Filters>
         </Console>
+         <Console name="SysOutClient" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{HH:mm:ss}] [%logger/%level]: %msg%n" />
+        </Console>
         <Console name="SysErr" target="SYSTEM_ERR">
             <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n" />
             <Filters>
@@ -28,8 +31,9 @@
             <AppenderRef ref="SysOut"/>
             <AppenderRef ref="File"/>
     	</Logger>
-        <Root level="DEBUG">
-        	<AppenderRef ref="SysErr"/>
-        </Root>
+    	<Logger name="TestClient" level="ALL">
+            <AppenderRef ref="SysOutClient"/>
+    	</Logger>
+        <Root level="ERROR"></Root>
     </Loggers>
 </Configuration>

@@ -1,4 +1,4 @@
-package thedarkdnktv.openbjs.api.network.code;
+package thedarkdnktv.openbjs.api.network.codec;
 
 import java.io.IOException;
 import java.util.List;
@@ -38,7 +38,6 @@ public class PacketDecoder extends ByteToMessageDecoder {
 			PacketBuf buf = new PacketBuf(in);
 			int varInt = buf.readVarInt();
 			ConnectionState state = ctx.channel().attr(NetworkHandler.PROTOCOL_ATTRIBUTE_KEY).get();
-			LOGGER.debug(state);
 			Packet<?> packet = state.getPacket(direction, varInt);
 			
 			if (packet == null) {

@@ -7,7 +7,10 @@ import java.net.InetAddress;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Filter.Result;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.filter.MarkerFilter;
 
 import thedarkdnktv.openbjs.api.API;
 import thedarkdnktv.openbjs.api.interfaces.IServer;
@@ -25,6 +28,7 @@ public class OpenBJS implements IServer {
 	
 	/* Misc settings */
 	public static final boolean DEBUG = true;
+	public static final boolean NET_DEBUG = false;
 	public static final String RANDOMORG_API_KEY = "7b57e9cc-6ebe-4c05-9456-a47e4e02ac62";
 	
 	/* Main Server settings */
@@ -55,6 +59,12 @@ public class OpenBJS implements IServer {
 		// Disable netty logging
 		Configurator.setLevel("io.netty", Level.WARN);
 		
+		if (!NET_DEBUG) {
+			MarkerFilter filter = MarkerFilter.createFilter("NETWORK", Result.DENY, Result.NEUTRAL);
+			LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+	        ctx.getConfiguration().addFilter(filter);
+		}
+		
 		CommandManager.init();
 		new Thread(INSTANCE = new OpenBJS(), "Server Thread").start();
 		
@@ -82,10 +92,18 @@ public class OpenBJS implements IServer {
 
 	@Override
 	public void run() {
-		logger.info("Starting OpenBJS Server");
+		InetAddress address = null;  // TODO port & ip
+		int port = 100;
 		
 		try {
-			this.getNetworkSystem().addEndpoint(InetAddress.getLocalHost(), 100); // TODO port & ip
+			address = InetAddress.getLocalHost();
+		} catch (Throwable e) {}
+		
+		logger.info("Starting OpenBJS Server");
+		logger.info("Staring server on " + (address == null ? "localhost" : address.getHostAddress()) + ":" + port);
+		
+		try {
+			this.getNetworkSystem().addEndpoint(address, port);
 		} catch (IOException e) {
 			logger.error("**** FAILED TO BIND TO PORT!");
 			logger.error("Excpetion was: {}", e.toString());
@@ -95,6 +113,7 @@ public class OpenBJS implements IServer {
 		API.initClients();
 		API.runClients(INSTANCE);
 		
+		logger.info("Done. Type '?' or 'help' to show command list");
 		try {
 //			long time = System.currentTimeMillis();
 			while (isRunning) {

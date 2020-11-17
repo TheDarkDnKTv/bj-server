@@ -33,10 +33,10 @@ import thedarkdnktv.openbjs.api.network.NetworkHandler;
 import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.api.network.base.LazyLoadBase;
 import thedarkdnktv.openbjs.api.network.base.PacketDirection;
-import thedarkdnktv.openbjs.api.network.code.PacketDecoder;
-import thedarkdnktv.openbjs.api.network.code.PacketEncoder;
-import thedarkdnktv.openbjs.api.network.code.VarIntFrameDecoder;
-import thedarkdnktv.openbjs.api.network.code.VarIntFrameEncoder;
+import thedarkdnktv.openbjs.api.network.codec.PacketDecoder;
+import thedarkdnktv.openbjs.api.network.codec.PacketEncoder;
+import thedarkdnktv.openbjs.api.network.codec.VarIntFrameDecoder;
+import thedarkdnktv.openbjs.api.network.codec.VarIntFrameEncoder;
 import thedarkdnktv.openbjs.api.util.ThreadFactoryBuilder;
 import thedarkdnktv.openbjs.network.handlers.HandshakeTCP;
 import thedarkdnktv.openbjs.network.packet.C_Handshake;
@@ -107,11 +107,11 @@ public class NetworkSystem {
 			if (Epoll.isAvailable()) { // TODO config option for this
 				chClz = EpollServerSocketChannel.class;
 				lazyloadbase = SERVER_EPOLL_EVENTLOOP;
-				logger.info("Activated epoll cahnnel type");
+				logger.info(NetworkHandler.NETWORK_MARKER, "Activated epoll cahnnel type");
 			} else {
 				chClz = NioServerSocketChannel.class;
 				lazyloadbase = SERVER_NIO_EVENTLOOP;
-				logger.info("Using default channel type");
+				logger.info(NetworkHandler.NETWORK_MARKER, "Using default channel type");
 			}
 			
 			ServerBootstrap bootstrap = new ServerBootstrap().channel(chClz).childHandler(new ChannelInitializer<Channel>() {
