@@ -132,7 +132,7 @@ public class NetworkSystem {
 					ch.pipeline().addLast("packet_handler", manager);
 					manager.setNetHandler(new HandshakeTCP(NetworkSystem.this.server, manager));
 					
-					NetworkSystem.logger.debug("Connection from " + ch.remoteAddress().toString());
+					NetworkSystem.logger.debug(NetworkHandler.NETWORK_MARKER, "Connection from " + ch.remoteAddress().toString());
 				}
 			});
 			

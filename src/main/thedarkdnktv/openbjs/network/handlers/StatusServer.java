@@ -1,5 +1,8 @@
 package thedarkdnktv.openbjs.network.handlers;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import thedarkdnktv.openbjs.OpenBJS;
 import thedarkdnktv.openbjs.api.network.NetworkHandler;
 import thedarkdnktv.openbjs.manage.TableManager;
@@ -12,6 +15,8 @@ import thedarkdnktv.openbjs.network.packet.S_ServerQuery;
 public class StatusServer implements IStatusServer {
 	
 	private static final String EXIT_MESSAGE = "Status request has been handled";
+	private static final Logger logger = LogManager.getLogger();
+	
 	private final OpenBJS server;
 	private final NetworkHandler networkManager;
 	private boolean handled;
@@ -23,7 +28,9 @@ public class StatusServer implements IStatusServer {
 	}
 	
 	@Override
-	public void onDisconnection(String reason) {}
+	public void onDisconnection(String reason) {
+		logger.debug(NetworkHandler.NETWORK_MARKER, "Disconnected: " + EXIT_MESSAGE);
+	}
 
 	@Override
 	public void processPing(C_Ping packet) {

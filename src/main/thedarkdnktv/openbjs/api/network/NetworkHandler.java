@@ -169,7 +169,7 @@ public class NetworkHandler extends SimpleChannelInboundHandler<Packet<?>> {
 	public void setConnectionState(ConnectionState newState) {
 		this.channel.attr(PROTOCOL_ATTRIBUTE_KEY).set(newState);
 		this.channel.config().setAutoRead(true);
-		logger.debug(NETWORK_MARKER, "Enabled auto read cause of state " + newState);
+		logger.debug(NETWORK_MARKER, "Enabled auto read");
 	}
 	
 	public SocketAddress getRemoteAddress() {

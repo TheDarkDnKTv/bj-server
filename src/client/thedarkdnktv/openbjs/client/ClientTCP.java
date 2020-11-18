@@ -56,6 +56,8 @@ public class ClientTCP implements ITickable, IInitializable {
 		try {
 			handler = NetHandlerClient.createAndConnect(InetAddress.getLocalHost(), 100);
 			handler.setNetHandler(new IStatusClient() {
+				long pingSentAt = 0;
+				
 				@Override
 				public void onDisconnection(String reason) {
 				}
@@ -63,18 +65,19 @@ public class ClientTCP implements ITickable, IInitializable {
 				@Override
 				public void handleServerQuery(S_ServerQuery packet) {
 					ClientTCP.logger.info(packet.getMessage());
-//					ClientTCP.this.handler.closeChannel("Status recieved");
+					pingSentAt = System.currentTimeMillis();
+					handler.sendPacket(new C_Ping(pingSentAt));
 				}
 				
 				@Override
 				public void handlePong(S_Pong packet) {
 					long time = System.currentTimeMillis();
-					ClientTCP.logger.info("PONG for " + ((long) time - packet.getClientTime()) + "ms");
+					ClientTCP.logger.info("PONG for " + ((long) time - pingSentAt) + "ms");
+					handler.closeChannel("Finished");
 				}
 			});
 			
 			handler.sendPacket(new C_Handshake(InetAddress.getLocalHost().getHostAddress(), 100, ConnectionState.STATUS));
-			handler.sendPacket(new C_Ping(System.currentTimeMillis()));
 			handler.sendPacket(new C_ServerQuery());
 		} catch (Throwable e) {
 			logger.catching(e);
