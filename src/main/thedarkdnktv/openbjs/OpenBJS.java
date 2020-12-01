@@ -203,17 +203,12 @@ public class OpenBJS implements IServer, IThreadListener {
 	@Override
 	public Future<Object> scheduleTask(Runnable executable) {
 		Objects.requireNonNull(executable);
-		FutureTask<Object> task = new FutureTask<>(executable, null);
-		
-		if (!this.calledFromProperThread()) {
-			synchronized (futureTasks) {
-				futureTasks.offer(task);
-			}
-		} else {
-			this.tryExecuteTask(task);
+		synchronized (futureTasks) {
+			FutureTask<Object> task = new FutureTask<>(executable, null);
+			futureTasks.offer(task);
+			
+			return task;
 		}
-		
-		return task;
 	}
 
 	@Override
