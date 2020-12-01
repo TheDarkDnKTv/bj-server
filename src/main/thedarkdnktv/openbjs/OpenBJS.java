@@ -3,6 +3,11 @@ package thedarkdnktv.openbjs;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.InetAddress;
+import java.util.ArrayDeque;
+import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -17,12 +22,13 @@ import thedarkdnktv.openbjs.api.interfaces.IServer;
 import thedarkdnktv.openbjs.manage.CommandManager;
 import thedarkdnktv.openbjs.manage.TableManager;
 import thedarkdnktv.openbjs.network.NetworkSystem;
+import thedarkdnktv.openbjs.util.IThreadListener;
 
 /**
  * @author TheDarkDnKTv
  *
  */
-public class OpenBJS implements IServer {
+public class OpenBJS implements IServer, IThreadListener {
 	private static final Logger logger = LogManager.getLogger();
 	private static final UncaughtExceptionHandler HANDLER;
 	
@@ -43,12 +49,16 @@ public class OpenBJS implements IServer {
 	private TableManager tableManager;
 	private NetworkSystem networkSystem;
 	private boolean isRunning;
+	private Queue<FutureTask<Object>> futureTasks;
+	private Thread main;
 	
 	private OpenBJS() {
 		// TODO init server config
 		commandManager = new CommandManager();
 		tableManager = new TableManager();
 		networkSystem = new NetworkSystem(this);
+		futureTasks = new ArrayDeque<>();
+		
 		
 		isRunning = true;
 	}
@@ -92,6 +102,7 @@ public class OpenBJS implements IServer {
 
 	@Override
 	public void run() {
+		main = Thread.currentThread();
 		InetAddress address = null;  // TODO port & ip
 		int port = 100;
 		
@@ -140,8 +151,26 @@ public class OpenBJS implements IServer {
 	
 	private void tick() {
 		commandManager.executePendingCommands();
-		tableManager.updateTables();
 		networkSystem.networkTick();
+		this.executeTasks();
+		tableManager.updateTables();
+	}
+	
+	private void executeTasks() {
+		synchronized (futureTasks) {
+			while (!futureTasks.isEmpty()) {
+				this.tryExecuteTask(futureTasks.poll());
+			}
+		}
+	}
+	
+	private void tryExecuteTask(FutureTask<Object> task) {
+		try {
+			task.run();
+		} catch (Throwable e) {
+			logger.debug("Exception occured execution task");
+			logger.catching(Level.DEBUG, e);
+		}
 	}
 	
 	public TableManager getTableManager() {
@@ -169,5 +198,26 @@ public class OpenBJS implements IServer {
 	@Override
 	public boolean isRunning() {
 		return this.isRunning;
+	}
+
+	@Override
+	public Future<Object> scheduleTask(Runnable executable) {
+		Objects.requireNonNull(executable);
+		FutureTask<Object> task = new FutureTask<>(executable, null);
+		
+		if (!this.calledFromProperThread()) {
+			synchronized (futureTasks) {
+				futureTasks.offer(task);
+			}
+		} else {
+			this.tryExecuteTask(task);
+		}
+		
+		return task;
+	}
+
+	@Override
+	public boolean calledFromProperThread() {
+		return Thread.currentThread() == main;
 	}
 }
