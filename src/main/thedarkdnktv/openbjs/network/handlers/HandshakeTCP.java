@@ -37,7 +37,7 @@ public class HandshakeTCP implements IHandshakeServer {
 				networkManager.sendPacket(new S_Disconnect(err));
 				networkManager.closeChannel(err);
 			} else {
-//				networkManager.setNetHandler(handler); // TODO login handler
+				networkManager.setNetHandler(new LoginServer(server, networkManager));
 			}
 			
 			break;

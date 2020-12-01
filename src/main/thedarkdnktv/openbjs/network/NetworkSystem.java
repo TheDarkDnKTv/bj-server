@@ -40,6 +40,7 @@ import thedarkdnktv.openbjs.api.network.codec.VarIntFrameEncoder;
 import thedarkdnktv.openbjs.api.util.ThreadFactoryBuilder;
 import thedarkdnktv.openbjs.network.handlers.HandshakeTCP;
 import thedarkdnktv.openbjs.network.packet.C_Handshake;
+import thedarkdnktv.openbjs.network.packet.C_LoginStart;
 import thedarkdnktv.openbjs.network.packet.C_Ping;
 import thedarkdnktv.openbjs.network.packet.C_ServerQuery;
 import thedarkdnktv.openbjs.network.packet.S_Disconnect;
@@ -180,6 +181,7 @@ public class NetworkSystem {
 		STATUS		.registerPacket(PacketDirection.CLIENTBOUND, S_ServerQuery.class);
 		
 		LOGIN		.registerPacket(PacketDirection.CLIENTBOUND, S_Disconnect.class);
+		LOGIN		.registerPacket(PacketDirection.SERVERBOUND, C_LoginStart.class);
 		
 		ConnectionState.registerPackets();
 	}

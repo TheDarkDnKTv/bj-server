@@ -13,6 +13,7 @@ import thedarkdnktv.openbjs.api.network.base.ConnectionState;
 import thedarkdnktv.openbjs.client.network.NetHandlerClient;
 import thedarkdnktv.openbjs.network.handlers.interfaces.IStatusClient;
 import thedarkdnktv.openbjs.network.packet.C_Handshake;
+import thedarkdnktv.openbjs.network.packet.C_LoginStart;
 import thedarkdnktv.openbjs.network.packet.C_Ping;
 import thedarkdnktv.openbjs.network.packet.C_ServerQuery;
 import thedarkdnktv.openbjs.network.packet.S_Pong;
@@ -77,8 +78,8 @@ public class ClientTCP implements ITickable, IInitializable {
 				}
 			});
 			
-			handler.sendPacket(new C_Handshake(InetAddress.getLocalHost().getHostAddress(), 100, ConnectionState.STATUS));
-			handler.sendPacket(new C_ServerQuery());
+			handler.sendPacket(new C_Handshake(InetAddress.getLocalHost().getHostAddress(), 100, ConnectionState.LOGIN));
+			handler.sendPacket(new C_LoginStart("TEST"));
 		} catch (Throwable e) {
 			logger.catching(e);
 		}
