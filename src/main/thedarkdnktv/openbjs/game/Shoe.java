@@ -18,15 +18,19 @@ public class Shoe extends ArrayBlockingQueue<Card> {
 	private boolean needShuffle;
 	
 	public Shoe() {
-		super(OpenBJS.CARDS + 1, true);
+		super(getTotalCards(), true);
 		valid = false;
 		needShuffle = true;
 	}
 	
 	public Shoe(Collection<Card> cards) {
-		super(OpenBJS.CARDS + 1, true, cards);
+		super(getTotalCards(), true, cards);
 		valid = false;
 		needShuffle = true;
+	}
+	
+	private static int getTotalCards() {
+		return OpenBJS.INSTANCE.getServerConfig().getGameSettings().CARDS + 1;
 	}
 	
 	public boolean validate() {

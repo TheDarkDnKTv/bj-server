@@ -42,17 +42,8 @@ public class API {
 		logger = LogManager.getLogger();
 		REGISTRY = new HashMap<>();
 		TICKABLES = new HashMap<>();
-		
-		boolean debug = false, net_debug = false;
-		
-		try {
-			Class<?> openbjs = Class.forName("thedarkdnktv.openbjs.OpenBJS");
-			debug = openbjs.getField("DEBUG").getBoolean(null);
-			net_debug = openbjs.getField("NET_DEBUG").getBoolean(null);
-		} catch(Throwable e) {}
-		
-		DEBUG = debug;
-		NETWORK_DEBUG = net_debug; // TODO load from config
+		DEBUG = false;
+		NETWORK_DEBUG = false;
 	}
 	
 	public static void init() {

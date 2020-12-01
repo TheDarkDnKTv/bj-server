@@ -53,7 +53,7 @@ public class CommandManager implements Runnable {
 			try {
 				this.processCommand(new ArrayList<>(Arrays.asList(command.split(" "))));
 			} catch (CommandExecuteException e) {
-				logger.info("Exception occured trying execute command - '" + e.getMessage() + "'");
+				logger.fatal("Exception occured trying execute command - '" + e.getMessage() + "'");
 				logger.catching(e);
 			}
 		}

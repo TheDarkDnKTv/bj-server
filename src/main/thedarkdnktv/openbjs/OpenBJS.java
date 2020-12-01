@@ -12,16 +12,13 @@ import java.util.concurrent.FutureTask;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.Filter.Result;
-import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.core.filter.MarkerFilter;
-
 import thedarkdnktv.openbjs.api.API;
 import thedarkdnktv.openbjs.api.interfaces.IServer;
 import thedarkdnktv.openbjs.manage.CommandManager;
 import thedarkdnktv.openbjs.manage.TableManager;
 import thedarkdnktv.openbjs.network.NetworkSystem;
+import thedarkdnktv.openbjs.util.Config;
 import thedarkdnktv.openbjs.util.IThreadListener;
 
 /**
@@ -32,17 +29,8 @@ public class OpenBJS implements IServer, IThreadListener {
 	private static final Logger logger = LogManager.getLogger();
 	private static final UncaughtExceptionHandler HANDLER;
 	
-	/* Misc settings */
-	public static final boolean DEBUG = true;
-	public static final boolean NET_DEBUG = true;
-	public static final String RANDOMORG_API_KEY = "7b57e9cc-6ebe-4c05-9456-a47e4e02ac62";
-	
-	/* Main Server settings */
-	public static final int DECK_SIZE = 52;
-	public static final int DECKS = 8;
-	public static final int CARDS = DECKS * DECK_SIZE;
-	public static final int TICK_PERIOD = 100;
-	
+	/* Server settings */
+	private static Config config;
 	public static OpenBJS INSTANCE;
 	
 	private CommandManager commandManager;
@@ -53,12 +41,11 @@ public class OpenBJS implements IServer, IThreadListener {
 	private Thread main;
 	
 	private OpenBJS() {
-		// TODO init server config
 		commandManager = new CommandManager();
 		tableManager = new TableManager();
 		networkSystem = new NetworkSystem(this);
 		futureTasks = new ArrayDeque<>();
-		
+		config = Config.init(logger);
 		
 		isRunning = true;
 	}
@@ -68,13 +55,6 @@ public class OpenBJS implements IServer, IThreadListener {
 		
 		// Disable netty logging
 		Configurator.setLevel("io.netty", Level.WARN);
-		
-		if (!NET_DEBUG) {
-			MarkerFilter filter = MarkerFilter.createFilter("NETWORK", Result.DENY, Result.NEUTRAL);
-			LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
-	        ctx.getConfiguration().addFilter(filter);
-		}
-		
 		CommandManager.init();
 		new Thread(INSTANCE = new OpenBJS(), "Server Thread").start();
 		
@@ -142,7 +122,7 @@ public class OpenBJS implements IServer, IThreadListener {
 //				}
 				
 				execution = System.currentTimeMillis() - execution;
-				if (execution < TICK_PERIOD) Thread.sleep(TICK_PERIOD - execution);
+				if (execution < config.getTickTime()) Thread.sleep(config.getTickTime() - execution);
 			}
 		} catch (Throwable e) {
 			logger.catching(e);
@@ -179,6 +159,10 @@ public class OpenBJS implements IServer, IThreadListener {
 	
 	public NetworkSystem getNetworkSystem() {
 		return networkSystem;
+	}
+	
+	public Config getServerConfig() {
+		return config;
 	}
 	
 	@Override

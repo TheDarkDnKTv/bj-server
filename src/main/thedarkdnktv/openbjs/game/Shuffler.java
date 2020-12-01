@@ -23,6 +23,8 @@ import com.google.gson.JsonPrimitive;
 import thedarkdnktv.openbjs.OpenBJS;
 import thedarkdnktv.openbjs.exception.ShoeNotValidException;
 import thedarkdnktv.openbjs.exception.WrongShuffleException;
+import thedarkdnktv.openbjs.util.Config;
+import thedarkdnktv.openbjs.util.Config.GameplaySettings;
 import thedarkdnktv.openbjs.util.NetworkUtils;
 
 /**
@@ -41,20 +43,23 @@ public class Shuffler {
 	private static final Logger logger = LogManager.getLogger();
 	
 	private static Random random;
+	private static GameplaySettings gameSettings;
 	protected static final Set<Card> STANDARD;
 	
 	static {
 		Set<Card> shoe = new HashSet<>(getNewShoe());
 		STANDARD = Collections.unmodifiableSet(shoe);
+		gameSettings = OpenBJS.INSTANCE.getServerConfig().getGameSettings();
 	}
 	
 	public static void initRandom() {
 		if (random == null) {
-			if (!OpenBJS.DEBUG) {
+			Config config = OpenBJS.INSTANCE.getServerConfig();
+			if (config.getRandomAvailable()) {
 				JsonObject obj = new JsonObject();
 				JsonObject params = new JsonObject();
 				
-				params.add("apiKey", new JsonPrimitive(OpenBJS.RANDOMORG_API_KEY));
+				params.add("apiKey", new JsonPrimitive(config.getRandomAPIKey()));
 				params.add("n", new JsonPrimitive(1));
 				params.add("min", new JsonPrimitive(100000));
 				params.add("max", new JsonPrimitive(1000000000));
@@ -165,7 +170,7 @@ public class Shuffler {
 		
 		while (left.size() > 0 || right.size() > 0) {
 			List<C> a = null, b = null;
-			double deckMult = OpenBJS.DECK_SIZE * 0.75D;
+			double deckMult = gameSettings.DECK_SIZE * 0.75D;
 			if (left.size() > deckMult && right.size() > deckMult) {
 				a = splitDeck(left);
 				b = splitDeck(right);
@@ -197,9 +202,9 @@ public class Shuffler {
 	 */
 	private static <C extends Card> List<C> splitDeck(List<C> halfTower) {
 		List<C> result = new ArrayList<>();
-		int deckMult = (int) (OpenBJS.DECK_SIZE * 0.175D);
+		int deckMult = (int) (gameSettings.DECK_SIZE * 0.175D);
 		int randOffset = random.nextInt(deckMult) - (deckMult / 2);
-		int position = halfTower.size() - (OpenBJS.DECK_SIZE / 2 + randOffset);
+		int position = halfTower.size() - (gameSettings.DECK_SIZE / 2 + randOffset);
 		result = new ArrayList<>(halfTower.subList(position < 0 ? 0 : position, halfTower.size()));
 		halfTower.removeAll(result);
 		return result;
@@ -212,7 +217,7 @@ public class Shuffler {
 		List<C> temp = riffle(left, right);
 		strip(temp);
 		int middle = temp.size() / 2;
-		int randomOffset = random.nextInt(OpenBJS.DECK_SIZE / 12) - OpenBJS.DECK_SIZE / 6;
+		int randomOffset = random.nextInt(gameSettings.DECK_SIZE / 12) - gameSettings.DECK_SIZE / 6;
 		left.addAll(temp.subList(0, middle + randomOffset));
 		right.addAll(temp.subList(middle + randomOffset, temp.size()));
 		temp = riffle(left, right);
@@ -248,7 +253,7 @@ public class Shuffler {
 	 */
 	private static <C extends Card> void strip(List<C> deck) {
 		List<C> temp = new ArrayList<>();
-		if (deck.size() < OpenBJS.DECK_SIZE / 4) {
+		if (deck.size() < gameSettings.DECK_SIZE / 4) {
 			throw new IllegalArgumentException("Can not make strip from such small deck! Deck size: " + deck.size());
 		}
 		
@@ -272,7 +277,7 @@ public class Shuffler {
 	 * @return
 	 */
 	private static int getHalfOffset() {
-		int offset = (int) (OpenBJS.CARDS * 0.05D);
+		int offset = (int) (gameSettings.CARDS * 0.05D);
 		return random.nextInt(offset * 2) - offset;
 	}
 	
