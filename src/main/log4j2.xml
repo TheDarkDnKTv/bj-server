@@ -4,7 +4,7 @@
         <Console name="SysOut" target="SYSTEM_OUT">
             <PatternLayout>
             	<LoggerNameSelector defaultPattern="[%d{HH:mm:ss}] [%logger/%level]: %msg%n">
-            		<PatternMatch key="thedarkdnktv.openbjs." pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n"/>
+            		<PatternMatch key="thedarkdnktv.openbjs." pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n%throwable"/>
             	</LoggerNameSelector>
             </PatternLayout>
             <Filters>
@@ -15,7 +15,7 @@
         <Console name="SysErr" target="SYSTEM_ERR">
             <PatternLayout>
             	<LoggerNameSelector defaultPattern="[%d{HH:mm:ss}] [%logger/%level]: %msg%n">
-            		<PatternMatch key="thedarkdnktv.openbjs." pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n"/>
+            		<PatternMatch key="thedarkdnktv.openbjs." pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n%throwable"/>
             	</LoggerNameSelector>
             </PatternLayout>
             <Filters>
@@ -25,7 +25,7 @@
         <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout>
             	<LoggerNameSelector defaultPattern="[%d{HH:mm:ss}] [%logger/%level]: %msg%n">
-            		<PatternMatch key="thedarkdnktv.openbjs." pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n"/>
+            		<PatternMatch key="thedarkdnktv.openbjs." pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n%throwable"/>
             	</LoggerNameSelector>
             </PatternLayout>
             <Policies>
