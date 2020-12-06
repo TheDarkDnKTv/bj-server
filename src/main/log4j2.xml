@@ -3,7 +3,7 @@
     <Appenders>
         <Console name="SysOut" target="SYSTEM_OUT">
             <PatternLayout>
-            	<LoggerNameSelector defaultPattern="[%d{HH:mm:ss}] [%logger/%level]: %msg%n">
+            	<LoggerNameSelector defaultPattern="[%d{HH:mm:ss}] [%logger/%level]: %msg%n%throwable">
             		<PatternMatch key="thedarkdnktv.openbjs." pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n%throwable"/>
             	</LoggerNameSelector>
             </PatternLayout>
@@ -14,7 +14,7 @@
         </Console>
         <Console name="SysErr" target="SYSTEM_ERR">
             <PatternLayout>
-            	<LoggerNameSelector defaultPattern="[%d{HH:mm:ss}] [%logger/%level]: %msg%n">
+            	<LoggerNameSelector defaultPattern="[%d{HH:mm:ss}] [%logger/%level]: %msg%n%throwable">
             		<PatternMatch key="thedarkdnktv.openbjs." pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n%throwable"/>
             	</LoggerNameSelector>
             </PatternLayout>
