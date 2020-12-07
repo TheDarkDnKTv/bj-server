@@ -2,6 +2,7 @@ package thedarkdnktv.openbjs.network;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -133,7 +134,8 @@ public class NetworkSystem {
 					ch.pipeline().addLast("packet_handler", manager);
 					manager.setNetHandler(new HandshakeTCP(NetworkSystem.this.server, manager));
 					
-					NetworkSystem.logger.debug(NetworkHandler.NETWORK_MARKER, "Connection from " + ch.remoteAddress().toString());
+					InetSocketAddress addr = (InetSocketAddress)ch.remoteAddress();
+					NetworkSystem.logger.debug(NetworkHandler.NETWORK_MARKER, "Connection from " + addr.getAddress().getHostAddress() + ":" + addr.getPort());
 				}
 			});
 			

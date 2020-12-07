@@ -2,7 +2,6 @@ package thedarkdnktv.openbjs;
 
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.net.InetAddress;
 import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.Queue;

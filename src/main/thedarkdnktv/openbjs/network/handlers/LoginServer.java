@@ -1,5 +1,7 @@
 package thedarkdnktv.openbjs.network.handlers;
 
+import java.net.InetSocketAddress;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -50,7 +52,8 @@ public class LoginServer implements ILoginServer, ITickable {
 			String msg = server.getPlayerManager().allowConnect(playerName, handler);
 			if (msg == null) {
 				Player player = server.getPlayerManager().getPlayerFor(playerName, handler);
-				logger.info("{} ({}) joined server", player.getUsername(), handler.getRemoteAddress());
+				InetSocketAddress addr = ((InetSocketAddress)handler.getRemoteAddress());
+				logger.info("{} ({}:{}) has joined server", player.getUsername(), addr.getAddress().getHostAddress(), addr.getPort());
 				
 				state = State.ACCEPTED;
 			} else {
