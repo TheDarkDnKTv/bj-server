@@ -105,7 +105,7 @@ public class NetworkSystem {
 			Class<? extends ServerSocketChannel> chClz;
 			LazyLoadBase<? extends EventLoopGroup> lazyloadbase;
 			
-			if (Epoll.isAvailable()) { // TODO config option for this
+			if (server.getServerConfig().isUsingEpoll() && Epoll.isAvailable()) {
 				chClz = EpollServerSocketChannel.class;
 				lazyloadbase = SERVER_EPOLL_EVENTLOOP;
 				logger.info(NetworkHandler.NETWORK_MARKER, "Activated epoll cahnnel type");

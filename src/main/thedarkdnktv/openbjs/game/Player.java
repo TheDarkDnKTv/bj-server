@@ -1,5 +1,7 @@
 package thedarkdnktv.openbjs.game;
 
+import thedarkdnktv.openbjs.api.network.NetworkHandler;
+
 /**
  * 
  * @author TheDarkDnKTv
@@ -7,11 +9,14 @@ package thedarkdnktv.openbjs.game;
  */
 public class Player {
 	private String displayName = "unknown";
+	public final NetworkHandler netHandler;
+	
 	private Hand mainHand;
 	private Hand splittedHand;
 	
-	public Player(String name) {
+	public Player(String name, NetworkHandler handler) {
 		displayName = name;
+		netHandler = handler;
 	}
 	
 	/*

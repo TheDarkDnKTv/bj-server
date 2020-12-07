@@ -3,10 +3,17 @@ package thedarkdnktv.openbjs.util;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +24,13 @@ import org.apache.logging.log4j.core.filter.MarkerFilter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
 import thedarkdnktv.openbjs.api.API;
 
@@ -30,31 +44,40 @@ public class Config {
 	private static transient Gson GSON;
 	
 	// A API-key for true random
-	private boolean useRadnomOrg;
-	private String RANDOM_ORG_API_KEY;
+	private Property<Boolean> useRandomOrg;
+	private Property<String> randomOrgApiKey;
+	private Property<InetAddress> address;
+	private Property<Integer> port;
+	private Property<Boolean> useEpoll;
 
 	// Debugging
-	public final boolean DEBUG;
-	public final boolean NET_DEBUG ;
+	public final Property<Boolean> DEBUG;
+	public final Property<Boolean> NET_DEBUG;
 	
 	// Main server arguments
-	private int DECK_SIZE;
-	private int DECKS;
-	private int TICK_PERIOD;
+	private Property<Integer> DECK_SIZE;
+	private Property<Integer> DECKS;
+	private Property<Integer> TICK_PERIOD;
 	
-	private transient int CARDS = DECKS * DECK_SIZE;
 	
 	// For private use only
 	private Config() {
-		DEBUG = false;
-		NET_DEBUG = false;
+		this(false, false);
+	}
+	
+	private Config(boolean debug, boolean netDebug) {
+		DECK_SIZE 			= Property.of("server.deck_size", 52);
+		DECKS 				= Property.of("server.decks_amount", 8);
+		TICK_PERIOD 		= Property.of("server.tick_time", 100);
 		
-		DECK_SIZE = 52;
-		DECKS = 8;
-		TICK_PERIOD = 100;
+		DEBUG 				= Property.of("server.debug", debug);
+		NET_DEBUG			= Property.of("server.debug.network", netDebug);
 		
-		RANDOM_ORG_API_KEY = "";
-		useRadnomOrg = false;
+		useRandomOrg 		= Property.of("random_org.use", false);
+		randomOrgApiKey 	= Property.of("random_org.api_key", "");
+		address				= Property.of("server.ip", InetAddress.getLoopbackAddress());
+		port 				= Property.of("server.port", 0x7FF8); // 32760 - default port
+		useEpoll 			= Property.of("server.use.native_transport", true);
 	}
 	
 	public static Config init(Logger logger) {
@@ -65,20 +88,16 @@ public class Config {
 				result = GSON.fromJson(reader, Config.class);
 			} catch (Throwable e) {
 				logger.warn("Unable to load existing config");
-				logger.catching(Level.DEBUG, e);
-				result = new Config();
+				try {
+					Files.delete(configFile);
+				} catch (IOException e1) {}
+				result = new Config().createConfig(logger);
 			}
 		} else {
-			result = new Config();
-			try (FileWriter writer = new FileWriter(configFile.toFile())) {
-				GSON.toJson(result, writer);
-			} catch (Throwable e) {
-				logger.fatal("Unable to write configuration file");
-				logger.catching(Level.DEBUG, e);
-			}
+			result = new Config().createConfig(logger);
 		}
 		
-		if (!result.DEBUG) {
+		if (!result.DEBUG.value) {
 			MarkerFilter filter = MarkerFilter.createFilter("NETWORK", Result.DENY, Result.NEUTRAL);
 			LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
 	        ctx.getConfiguration().addFilter(filter);
@@ -88,14 +107,8 @@ public class Config {
 			Class<?> clz = Class.forName("thedarkdnktv.openbjs.api.API", true, Config.class.getClassLoader());
 			Field fDebug 	= clz.getField("DEBUG");
 			Field fNetDebug = clz.getField("NETWORK_DEBUG");
-			Field fMods 	= Field.class.getDeclaredField("modifiers");
-			fDebug		.setAccessible(true);
-			fNetDebug	.setAccessible(true);
-			fMods		.setAccessible(true);
-			fMods.setInt(fDebug,	 fDebug.getModifiers() & ~Modifier.FINAL);
-			fMods.setInt(fNetDebug,	 fNetDebug.getModifiers() & ~Modifier.FINAL);
-			fDebug		.setBoolean(null, result.DEBUG);
-			fNetDebug	.setBoolean(null, result.NET_DEBUG);
+			API.setFinal(fDebug, result, Boolean.valueOf(result.DEBUG.value));
+			API.setFinal(fNetDebug, result, Boolean.valueOf(result.NET_DEBUG.value));
 		} catch (Throwable ignored) {
 			logger.catching(Level.DEBUG, ignored);
 			ignored.printStackTrace();
@@ -109,7 +122,16 @@ public class Config {
 		return result;
 	}
 	
-	
+	private Config createConfig(Logger logger) {
+		try (FileWriter writer = new FileWriter(configFile.toFile())) {
+			GSON.toJson(this, writer);
+		} catch (Throwable e) {
+			logger.fatal("Unable to write configuration file");
+			logger.catching(Level.DEBUG, e);
+		}
+		
+		return this;
+	}
 	
 	/* GETTERS */
 	
@@ -117,32 +139,48 @@ public class Config {
 	 * @return a base game settings
 	 */
 	public GameplaySettings getGameSettings() {
-		return new GameplaySettings(DECK_SIZE, DECKS, CARDS);
+		return new GameplaySettings(DECK_SIZE.value, DECKS.value, this.getCardsTotal());
 	}
 	
 	/**
 	 * @return total amount of playing cards in shoe
 	 */
 	public int getTickTime() {
-		return TICK_PERIOD;
+		return TICK_PERIOD.value;
+	}
+	
+	public int getCardsTotal() {
+		return DECKS.value * DECK_SIZE.value;
+	}
+	
+	public InetAddress getServerAddress() {
+		return address.value;
+	}
+	
+	public int getServerPort() {
+		return port.value;
 	}
 	
 	/**
 	 * @return null or API key
 	 */
 	public String getRandomAPIKey() {
-		return RANDOM_ORG_API_KEY;
+		return randomOrgApiKey.value;
 	}
 	
 	public boolean getRandomAvailable() {
-		return useRadnomOrg && RANDOM_ORG_API_KEY != null && !RANDOM_ORG_API_KEY.isEmpty();
+		return useRandomOrg.value && !getRandomAPIKey().isEmpty();
+	}
+	
+	public boolean isUsingEpoll() {
+		return useEpoll.value;
 	}
 	
 	static {
 		configFile = new File("server.json").toPath();
 		GSON = new GsonBuilder()
+				.registerTypeAdapter(Config.class, new Jsoner())
 				.setPrettyPrinting()
-				.serializeNulls()
 				.disableHtmlEscaping()
 				.create();
 	}
@@ -161,6 +199,73 @@ public class Config {
 			DECK_SIZE = deckSize;
 			DECKS = decks;
 			CARDS = cards;
+		}
+	}
+	
+	/**
+	 * A wrapper for value, containing name for config
+	 * @author TheDarkDnKTv
+	 */
+	private static abstract class Property<T> {
+		final T value;
+		
+		public static <T> Property<T> of(String name, T value) {
+			return new Property<T>(value) {
+				@Override
+				public String getName() {
+					return name;
+				}
+			};
+		}
+		
+		Property(T value) {
+			this.value = value;
+		}
+		
+		public abstract String getName();
+		
+		@Override
+		public String toString() {
+			return getName() + "=" + value;
+		}
+	}
+	
+	private static class Jsoner implements JsonSerializer<Config>, JsonDeserializer<Config> {
+		@Override
+		public Config deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+			if (!json.isJsonObject()) {
+				throw new JsonParseException("Not a object");
+			} else {
+				Config result = new Config();
+				JsonObject jobj = json.getAsJsonObject();
+				Map<String, Field> fields = Arrays.asList(Config.class.getDeclaredFields()).stream()
+						.filter(field -> field.getType() == Property.class)
+						.collect(HashMap::new,
+								(map, field) -> map.put(API.<Property<?>>getFieldValue(field, result).getName(), field),
+								HashMap::putAll);
+				for (Entry<String, Field> entry : fields.entrySet()) {
+					Class<?> clz = API.<Property<?>>getFieldValue(entry.getValue(), result).value.getClass();
+					Object value = context.deserialize(jobj.get(entry.getKey()), clz);
+					if (value != null) {
+						API.setFinal(entry.getValue(), result, Property.<Object>of(entry.getKey(), value));
+					} else {
+						throw new JsonParseException("Field not found " + entry.getKey());
+					}
+				}
+				
+				return result;
+			}
+		}
+
+		@Override
+		public JsonElement serialize(Config src, Type typeOfSrc, JsonSerializationContext context) {
+			JsonObject obj = new JsonObject();
+			Arrays.asList(Config.class.getDeclaredFields()).stream()
+				.filter(field -> field.getType() == Property.class)
+				.map(field -> API.<Property<?>>getFieldValue(field, src))
+				.sorted(Comparator.comparing(prop -> prop.getName()))
+				.forEach(prop -> obj.add(prop.getName(), Config.GSON.toJsonTree(prop.value)));
+			return obj;
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package thedarkdnktv.openbjs.api;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -96,6 +98,54 @@ public class API {
 			logger.info("Registered " + REGISTRY.size() + " API-based clients");
 		} else {
 			logger.info("No API-based clients was found");
+		}
+	}
+	
+	/**
+	 * Will change the value of final field
+	 * Not working for inline consts. (exm. final int X = 10;)
+	 * @param field of class to change
+	 * @param value to change on
+	 * @param instance of object (Nullable for static fields)
+	 */
+	public static void setFinal(Field field, Object instance, Object value) {
+		Objects.requireNonNull(field);
+		Objects.requireNonNull(value);
+		try {
+			field.setAccessible(true);
+			int mods = field.getModifiers();
+			Field modField = Field.class.getDeclaredField("modifiers");
+			modField.setAccessible(true);
+			if (Modifier.isFinal(mods)) modField.setInt(field, mods | ~Modifier.FINAL);
+			field.set(instance, value);
+			modField.setInt(field, mods);
+			field.setAccessible(false);
+		} catch (Throwable e) {}
+	}
+	
+	/** To specify type please use API.<String>getFieldvalue(field, null)
+	 * @param <T> the type of field, could be ClassCastException
+	 * @param field
+	 * @param instance (Nullable)
+	 * @return an value of field casted
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T getFieldValue(Field field, Object instance) {
+		Objects.requireNonNull(field);
+		try {
+			if (!field.isAccessible()) field.setAccessible(true);
+			return (T) field.get(instance);
+		} catch (Throwable e) {
+			return null;
+		}
+	}
+	
+	public static Field getField(Class<?> clz, String name) {
+		Objects.requireNonNull(clz);
+		try {
+			return clz.getDeclaredField(name);
+		} catch (Throwable e) {
+			return null;
 		}
 	}
 	

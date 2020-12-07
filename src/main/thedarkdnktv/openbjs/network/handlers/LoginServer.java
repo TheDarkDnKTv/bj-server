@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import thedarkdnktv.openbjs.OpenBJS;
 import thedarkdnktv.openbjs.api.interfaces.ITickable;
 import thedarkdnktv.openbjs.api.network.NetworkHandler;
+import thedarkdnktv.openbjs.game.Player;
 import thedarkdnktv.openbjs.network.handlers.interfaces.ILoginServer;
 import thedarkdnktv.openbjs.network.packet.C_LoginStart;
 import thedarkdnktv.openbjs.network.packet.S_Disconnect;
@@ -22,10 +23,12 @@ public class LoginServer implements ILoginServer, ITickable {
 	private final NetworkHandler handler;
 	
 	private String playerName;
+	private State state;
 	private int connectionTimer;
 	
 	public LoginServer(OpenBJS server, NetworkHandler handler) {
 		this.server = server;
+		this.state = State.HELLO;
 		this.handler = handler;
 	}
 	
@@ -36,13 +39,24 @@ public class LoginServer implements ILoginServer, ITickable {
 
 	@Override
 	public void processLoginStart(C_LoginStart packet) {
+		if (state != State.HELLO) throw new IllegalStateException("Unexpected hello packet");
 		playerName = packet.getLogin();
-		logger.error(playerName);
+		state = State.READY_TO_ACCEPT;
 	}
 
 	@Override
 	public void update() {
-		
+		if (state == State.READY_TO_ACCEPT) {
+			String msg = server.getPlayerManager().allowConnect(playerName, handler);
+			if (msg == null) {
+				Player player = server.getPlayerManager().getPlayerFor(playerName, handler);
+				logger.info("{} ({}) joined server", player.getUsername(), handler.getRemoteAddress());
+				
+				state = State.ACCEPTED;
+			} else {
+				this.disconnect(msg);
+			}
+		}
 		
 		if (this.connectionTimer++ >= 560) {
 			this.disconnect("Slow login");
@@ -62,5 +76,11 @@ public class LoginServer implements ILoginServer, ITickable {
 	private String connectionInfo() {
 		String address = String.valueOf(handler.getRemoteAddress());
 		return playerName != null ? playerName + " (" + address + ")" : address;
+	}
+	
+	static enum State {
+		HELLO,
+		READY_TO_ACCEPT,
+		ACCEPTED;
 	}
 }

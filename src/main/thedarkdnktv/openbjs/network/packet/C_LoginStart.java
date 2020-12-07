@@ -19,7 +19,7 @@ public class C_LoginStart implements Packet<ILoginServer> {
 	
 	@Override
 	public void writePacketData(PacketBuf buf) throws IOException {
-		buf.writeShort(login.length());
+		buf.writeShort(login.getBytes(StandardCharsets.UTF_8).length);
 		buf.writeCharSequence(login, StandardCharsets.UTF_8);
 	}
 

@@ -16,6 +16,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import thedarkdnktv.openbjs.api.API;
 import thedarkdnktv.openbjs.api.interfaces.IServer;
 import thedarkdnktv.openbjs.manage.CommandManager;
+import thedarkdnktv.openbjs.manage.PlayerRegistry;
 import thedarkdnktv.openbjs.manage.TableManager;
 import thedarkdnktv.openbjs.network.NetworkSystem;
 import thedarkdnktv.openbjs.util.Config;
@@ -36,6 +37,7 @@ public class OpenBJS implements IServer, IThreadListener {
 	private CommandManager commandManager;
 	private TableManager tableManager;
 	private NetworkSystem networkSystem;
+	private PlayerRegistry playerRegistry;
 	private boolean isRunning;
 	private Queue<FutureTask<Object>> futureTasks;
 	private Thread main;
@@ -44,6 +46,7 @@ public class OpenBJS implements IServer, IThreadListener {
 		commandManager = new CommandManager();
 		tableManager = new TableManager();
 		networkSystem = new NetworkSystem(this);
+		playerRegistry = new PlayerRegistry(this);
 		futureTasks = new ArrayDeque<>();
 		config = Config.init(logger);
 		
@@ -83,18 +86,12 @@ public class OpenBJS implements IServer, IThreadListener {
 	@Override
 	public void run() {
 		main = Thread.currentThread();
-		InetAddress address = null;  // TODO port & ip
-		int port = 100;
-		
-		try {
-			address = InetAddress.getLocalHost();
-		} catch (Throwable e) {}
 		
 		logger.info("Starting OpenBJS Server");
-		logger.info("Staring server on " + (address == null ? "localhost" : address.getHostAddress()) + ":" + port);
+		logger.info("Staring server on " + (config.getServerAddress().getHostAddress() + ":" + config.getServerPort()));
 		
 		try {
-			this.getNetworkSystem().addEndpoint(address, port);
+			this.getNetworkSystem().addEndpoint(config.getServerAddress(), config.getServerPort());
 		} catch (IOException e) {
 			logger.error("**** FAILED TO BIND TO PORT!");
 			logger.error("Excpetion was: {}", e.toString());
@@ -163,6 +160,10 @@ public class OpenBJS implements IServer, IThreadListener {
 	
 	public Config getServerConfig() {
 		return config;
+	}
+	
+	public PlayerRegistry getPlayerManager() {
+		return playerRegistry;
 	}
 	
 	@Override

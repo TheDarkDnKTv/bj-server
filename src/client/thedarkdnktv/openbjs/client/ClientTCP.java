@@ -15,7 +15,6 @@ import thedarkdnktv.openbjs.network.handlers.interfaces.IStatusClient;
 import thedarkdnktv.openbjs.network.packet.C_Handshake;
 import thedarkdnktv.openbjs.network.packet.C_LoginStart;
 import thedarkdnktv.openbjs.network.packet.C_Ping;
-import thedarkdnktv.openbjs.network.packet.C_ServerQuery;
 import thedarkdnktv.openbjs.network.packet.S_Pong;
 import thedarkdnktv.openbjs.network.packet.S_ServerQuery;
 
@@ -55,7 +54,7 @@ public class ClientTCP implements ITickable, IInitializable {
 	@Override
 	public void init() {
 		try {
-			handler = NetHandlerClient.createAndConnect(InetAddress.getLocalHost(), 100);
+			handler = NetHandlerClient.createAndConnect(InetAddress.getLoopbackAddress(), 32760);
 			handler.setNetHandler(new IStatusClient() {
 				long pingSentAt = 0;
 				
@@ -79,7 +78,7 @@ public class ClientTCP implements ITickable, IInitializable {
 			});
 			
 			handler.sendPacket(new C_Handshake(InetAddress.getLocalHost().getHostAddress(), 100, ConnectionState.LOGIN));
-			handler.sendPacket(new C_LoginStart("TEST"));
+			handler.sendPacket(new C_LoginStart("ТестUTF8"));
 		} catch (Throwable e) {
 			logger.catching(e);
 		}

@@ -69,7 +69,7 @@ public class NetHandlerClient extends NetworkHandler {
 			}
 		});
 		
-		boot.connect(address, port).syncUninterruptibly(); // TODO ip & address
+		boot.connect(address, port).syncUninterruptibly();
 		
 		return manager;
 	}
