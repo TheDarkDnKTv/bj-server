@@ -1,4 +1,4 @@
-package thedarkdnktv.openbjs.client.network;
+package thedarkdnktv.bjclient.network;
 
 import java.net.InetAddress;
 

@@ -1,1 +1,3 @@
 rootProject.name = 'bj-server'
+
+include 'client'

@@ -1,4 +1,4 @@
-package thedarkdnktv.openbjs.client;
+package thedarkdnktv.bjclient;
 
 import java.net.InetAddress;
 
@@ -10,7 +10,7 @@ import thedarkdnktv.openbjs.api.annotation.Client;
 import thedarkdnktv.openbjs.api.interfaces.IInitializable;
 import thedarkdnktv.openbjs.api.interfaces.ITickable;
 import thedarkdnktv.openbjs.api.network.base.ConnectionState;
-import thedarkdnktv.openbjs.client.network.NetHandlerClient;
+import thedarkdnktv.bjclient.network.NetHandlerClient;
 import thedarkdnktv.openbjs.network.handlers.interfaces.IStatusClient;
 import thedarkdnktv.openbjs.network.packet.C_Handshake;
 import thedarkdnktv.openbjs.network.packet.C_LoginStart;
