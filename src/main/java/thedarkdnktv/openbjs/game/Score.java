@@ -27,7 +27,7 @@ public class Score implements Comparable<Score>, Serializable {
 		}
 		
 		Rank cRank = card.getRank();
-		value += cRank.VALUE;
+		value += cRank.value;
 		applyCount++;
 		
 		if (value <= 21) {

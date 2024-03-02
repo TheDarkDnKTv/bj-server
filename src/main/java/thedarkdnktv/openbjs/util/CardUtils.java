@@ -19,7 +19,7 @@ public class CardUtils {
 	
 	public static boolean has10(Hand hand) {
 		for (Rank rank : hand.getCardsVisible().stream().map(c -> c.getRank()).collect(Collectors.toList())) {
-			if (rank.VALUE == 10) return true;
+			if (rank.value == 10) return true;
 		}
 		
 		return false;

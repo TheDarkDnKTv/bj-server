@@ -47,7 +47,7 @@ public class Card {
 	 * @return
 	 */
 	public String toStringS() {
-		return suit == null || rank == null ? "CUTTING_CARD" : suit.SYMBOL + rank.DENOMINATION;
+		return suit == null || rank == null ? "CUTTING_CARD" : suit.SYMBOL + rank.denomination;
 	}
 	
 	/*
