@@ -3,6 +3,9 @@ package thedarkdnktv.openbjs.game;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
+
+import thedarkdnktv.openbjs.core.AbstractCard;
 import thedarkdnktv.openbjs.enums.*;
 
 /**
@@ -10,10 +13,10 @@ import thedarkdnktv.openbjs.enums.*;
  * @author iDnK
  *
  */
-public class Card {
+public class Card extends AbstractCard {
 	
-	private Rank rank;
-	private Suit suit;
+	private final Rank rank;
+	private final Suit suit;
 	/** For debug purpuses only, to control a duplicates in shoe */
 	private int deckID = 0;
 	
@@ -41,22 +44,30 @@ public class Card {
 		
 		return Collections.unmodifiableCollection(deck);
 	}
-	
-	/**
-	 * Display-friendly toString method
-	 * @return
-	 */
+
+	@Override
+	public String represent() {
+		if (this == CUTTING_CARD) {
+			return "CUTTING_CARD";
+		}
+
+		return super.represent();
+	}
+
+	@Deprecated
 	public String toStringS() {
-		return suit == null || rank == null ? "CUTTING_CARD" : suit.SYMBOL + rank.denomination;
+		return this.represent();
 	}
 	
 	/*
 	 * GETTERS
 	 */
+	@Override
 	public Rank getRank() {
 		return rank;
 	}
-	
+
+	@Override
 	public Suit getSuit() {
 		return suit;
 	}
@@ -70,18 +81,17 @@ public class Card {
 	 */
 	@Override
 	public String toString() {
-		return suit == null || rank == null ? "CUTTING_CARD" : toStringS() + "(" + deckID + ")";
+		return suit == null || rank == null ? "CUTTING_CARD" : "[#" + this.deckID + "]" + this.represent();
 	}
 	
 	@Override
 	public int hashCode() {
-		return suit.hashCode() + rank.hashCode() + deckID;
+		return Objects.hash(this.suit, this.rank, this.deckID);
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof Card) {
-			Card crd = (Card) obj;
+		if (obj instanceof Card crd) {
 			return crd.deckID == this.deckID && crd.rank == this.rank && crd.suit == this.suit;
 		}
 		

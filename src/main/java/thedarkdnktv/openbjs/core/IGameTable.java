@@ -22,9 +22,16 @@ public interface IGameTable {
 
     int getMaxBet();
 
+    void setBet(int slot, double bet);
+
+    void setShoe(IShoe shoe);
+
+    void setShuffler(IShuffler shuffler);
+
     enum State {
         WAITING_FOR_BETS,
         BETTING_TIME,
+        DEALING,
         IN_GAME,
         GAME_RESOLVED,
         DISABLED

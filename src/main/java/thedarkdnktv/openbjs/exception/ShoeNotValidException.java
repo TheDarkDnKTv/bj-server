@@ -5,7 +5,7 @@ package thedarkdnktv.openbjs.exception;
  * @author TheDarkDnKTv
  *
  */
-public class ShoeNotValidException extends RuntimeException {
+public class ShoeNotValidException extends RuntimeException { // TODO make handled exception
 
 	/**
 	 * 

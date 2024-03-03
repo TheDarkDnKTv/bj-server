@@ -11,9 +11,9 @@ public enum Suit {
 	HEARTS	("♥"),
 	SPADES	("♠");
 	
-	public final String SYMBOL;
+	public final String symbol;
 	
 	Suit(String symbol) {
-		SYMBOL = symbol;
+		this.symbol = symbol;
 	}
 }

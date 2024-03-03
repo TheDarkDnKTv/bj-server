@@ -11,7 +11,7 @@ public interface IHand {
 
     void setState(HandState state);
 
-    void apply(Card card);
+    void apply(ICard card);
 
     int getScore();
 
@@ -33,13 +33,15 @@ public interface IHand {
 
     Set<Decision> performableDecisions();
 
-    int getBet();
+    double getBet();
+
+    void setBet(double value);
 
     void reset();
 
     enum HandState {
         EMPTY,
-        BETTING,
+        IDLE,
         HAS_BET,
         HAS_NO_BET,
         DEALING,

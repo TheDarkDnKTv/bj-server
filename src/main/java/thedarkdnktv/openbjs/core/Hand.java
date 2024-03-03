@@ -2,13 +2,12 @@ package thedarkdnktv.openbjs.core;
 
 import thedarkdnktv.openbjs.enums.Decision;
 import thedarkdnktv.openbjs.enums.Rank;
-import thedarkdnktv.openbjs.game.Card;
 
 import java.util.*;
 
 public class Hand implements IHand {
 
-    protected final List<Card> hand = new LinkedList<>();
+    protected final List<ICard> hand = new LinkedList<>();
 
     protected int score;
     protected boolean bj;
@@ -17,6 +16,7 @@ public class Hand implements IHand {
     protected boolean doubled;
 
     protected boolean isSplit;
+    protected double bet;
 
     protected HandState state;
     protected IHand splitHand;
@@ -37,15 +37,11 @@ public class Hand implements IHand {
 
     @Override
     public void setState(HandState state) {
-        if (state == HandState.BETTING) {
-            this.reset();
-        }
-
         this.state = state;
     }
 
     @Override
-    public void apply(Card card) {
+    public void apply(ICard card) {
         this.hand.add(card);
         this.score += card.getRank().value;
         if (card.getRank() == Rank.ACE) {
@@ -64,8 +60,13 @@ public class Hand implements IHand {
     }
 
     @Override
-    public int getBet() {
-        return 0;
+    public double getBet() {
+        return this.bet;
+    }
+
+    @Override
+    public void setBet(double value) {
+        this.bet = value;
     }
 
     @Override
@@ -112,6 +113,9 @@ public class Hand implements IHand {
         this.insured = false;
         this.doubled = false;
         this.splitHand = null;
+        if (this.getState() != HandState.EMPTY) {
+            this.setState(HandState.IDLE);
+        }
     }
 
     @Override
