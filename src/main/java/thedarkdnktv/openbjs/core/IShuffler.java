@@ -7,16 +7,16 @@ public interface IShuffler<T extends ICard> {
     ValidationResult VALID = new ValidationResult(null);
 
     /**
+     * Will validate a shoe with a cutting card in order to check all cards are present
      * @param shoe to check
      * @return ValidationResult with error if so
-     * @throws thedarkdnktv.openbjs.exception.ShoeNotValidException in case if shoe is invalid
      */
-    ValidationResult validate(Set<ICard> sample, int deckCount, Collection<T> shoe);
+    ValidationResult validate(Set<ICard> sample, int deckCount, List<T> shoe);
 
     /**
      * @param shoe to shuffle
      */
-    void shuffle(Collection<T> shoe);
+    void shuffle(List<T> shoe);
 
     class ValidationResult {
 

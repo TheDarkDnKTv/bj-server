@@ -1,12 +1,15 @@
 package thedarkdnktv.openbjs.core;
 
-import java.util.Collection;
-import java.util.Set;
+import thedarkdnktv.openbjs.game.Card;
+
+import java.util.*;
 
 public class DigitalRandomShuffler extends AbstractShuffler<AbstractCard> {
 
+    private final Random random = new Random(System.currentTimeMillis());
+
     @Override
-    public ValidationResult validate(Set<ICard> sample, int deckCount, Collection<AbstractCard> shoe) {
+    public ValidationResult validate(Set<ICard> sample, int deckCount, List<AbstractCard> shoe) {
         var size = sample.size() * deckCount + 1; // with cutting card
         if (size != shoe.size()) {
             return new ValidationResult("Card count does not match");
@@ -25,7 +28,11 @@ public class DigitalRandomShuffler extends AbstractShuffler<AbstractCard> {
     }
 
     @Override
-    public void shuffle(Collection<AbstractCard> shoe) {
-        // TODO
+    public void shuffle(List<AbstractCard> shoe) {
+        Collections.shuffle(shoe, this.random);
+        var idx = shoe.size() / 2;
+        var multiplier = (int) Math.ceil(idx * 0.05D);
+        idx += this.random.nextInt(multiplier) - Math.max(1, multiplier / 2);
+        shoe.add(idx, Card.CUTTING_CARD);
     }
 }
