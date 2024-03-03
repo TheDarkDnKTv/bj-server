@@ -5,12 +5,12 @@ import thedarkdnktv.openbjs.util.Timer;
 
 import java.time.Duration;
 import java.util.LinkedList;
-import java.util.Optional;
 
 public class Table implements IGameTable<AbstractCard> {
 
     protected static final Duration TIME_BETTING    = Duration.ofSeconds(30);
     protected static final Duration TIME_DEAL       = Duration.ofMillis(400);
+    protected static final Duration TIME_DECISION   = Duration.ofSeconds(15);
 
     private final Timer timer = new Timer();
 
@@ -22,6 +22,7 @@ public class Table implements IGameTable<AbstractCard> {
     private State state = State.WAITING_FOR_BETS;
     private IDealerHand dealer;
     private int activeSlot;
+    private boolean isDealerTurn;
     private boolean willShuffle;
 
     private IShuffler<AbstractCard> shuffler;
@@ -59,19 +60,66 @@ public class Table implements IGameTable<AbstractCard> {
             }
             case DEALING: {
                 if (timer.tick()) {
-                    var opt = this.dealNext();
-                    if (opt.isPresent()) {
-                        var hand = opt.get();
-                        var card = this.shoe.pop();
-                        this.holder.add(card);
-                        hand.apply(card);
-                    } else {
-                        this.setInGame();
-                    }
+                    if (this.isDealerTurn) {
+                        this.isDealerTurn = false;
+                        this.doDeal(this.dealer);
+                        if (this.dealer.getState() != HandState.DEALING) {
+                            this.setInGame();
+                        }
+                    } else do {
+                        if (this.doSlotRotation()) {
+                            this.isDealerTurn = true;
+                            break;
+                        }
 
+                        var hand = this.getCurrentSlot();
+                        if (hand.getState() == HandState.DEALING) {
+                            this.doDeal(hand);
+                            break;
+                        }
+                    } while (true);
 
                     if (!this.isWillShuffle() && this.shoe.isNeedShuffle()) {
                         this.setWillShuffle(true);
+                    }
+                }
+
+                break;
+            }
+            case IN_GAME: {
+                if (!this.isDealerTurn) {
+                    var hand = this.getCurrentSlot();
+                    switch (hand.getState()) {
+                        case WAITING_TURN: {
+                            hand.setState(HandState.DECISION_REQUIRED);
+                            break;
+                        }
+                        case DECISION_REQUIRED: {
+                            if (!this.timer.tick()) {
+                                break;
+                            }
+
+                            hand.setState(HandState.TURN_OVER);
+                        }
+                        default: {
+                            if (this.doSlotRotation()) {
+                                this.isDealerTurn = true;
+                                this.timer.setTime(TIME_DEAL);
+                            }
+
+                            break;
+                        }
+                    }
+                } else if (this.timer.tick()) { // Dealing dealer's hand
+                    if (!this.dealer.isHiddenCardOpen()) {
+                        this.dealer.setHiddenCardOpen();
+                        break;
+                    }
+
+                    if (this.dealer.getState() == HandState.DECISION_REQUIRED) {
+                        this.doDeal(this.dealer);
+                    } else if (this.dealer.getState() == HandState.TURN_OVER) {
+                        this.setGameResolved();
                     }
                 }
 
@@ -178,17 +226,19 @@ public class Table implements IGameTable<AbstractCard> {
         this.willShuffle = willShuffle;
     }
 
-    protected Optional<IHand> dealNext() {
+    protected boolean doSlotRotation() {
         if (this.activeSlot++ >= this.getSlotCount()) {
             this.activeSlot = 0;
+            return true;
         }
 
-        var hand = this.slots[this.activeSlot];
-        if (hand.getState() == HandState.DEALING) {
-            return Optional.of(hand);
-        }
+        return false;
+    }
 
-        return Optional.empty();
+    protected void doDeal(IHand hand) {
+        var card = this.shoe.pop();
+        this.holder.add(card);
+        hand.apply(card);
     }
 
     protected void setBettingTime() {
@@ -197,7 +247,10 @@ public class Table implements IGameTable<AbstractCard> {
     }
 
     protected void setInGame() {
+        this.state = State.IN_GAME;
         this.activeSlot = 0;
+        this.isDealerTurn = false;
+        this.timer.setTime(TIME_DECISION);
     }
 
     protected void setDealing() {
@@ -214,6 +267,7 @@ public class Table implements IGameTable<AbstractCard> {
         if (hasBets) {
             this.state = State.DEALING;
             this.timer.setTime(TIME_DEAL);
+            this.dealer.setState(HandState.DEALING);
             this.activeSlot = 0;
         } else {
             this.setWaiting();
@@ -222,16 +276,22 @@ public class Table implements IGameTable<AbstractCard> {
 
     protected void setWaiting() {
         this.state = State.WAITING_FOR_BETS;
-        this.activeSlot = -1;
+        this.activeSlot = 0;
+        this.isDealerTurn = false;
         this.dealer.reset();
         for (var slot : slots) {
             slot.reset();
         }
     }
 
+    protected void setGameResolved() {
+        this.state = State.GAME_RESOLVED;
+        this.activeSlot = 0;
+    }
+
     protected boolean canResultBeDefined(IHand slot) {
         return slot.getScore() > BjUtil.MAX_SCORE ||
                 this.dealer.getState() == HandState.TURN_OVER ||
-                (slot.isBj() && this.dealer.getOpenCard().getRank().value < 10);
+                (slot.isBj() && (slot == this.dealer || this.dealer.getOpenCard().getRank().value < 10));
     }
 }
