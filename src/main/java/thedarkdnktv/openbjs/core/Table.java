@@ -7,7 +7,7 @@ import java.time.Duration;
 import java.util.LinkedList;
 import java.util.Optional;
 
-public class Table implements IGameTable {
+public class Table implements IGameTable<AbstractCard> {
 
     protected static final Duration TIME_BETTING    = Duration.ofSeconds(30);
     protected static final Duration TIME_DEAL       = Duration.ofMillis(400);
@@ -17,15 +17,15 @@ public class Table implements IGameTable {
     private final int minBet;
     private final int maxBet;
     private final IHand[] slots;
-    private final LinkedList<ICard> holder;
+    private final LinkedList<AbstractCard> holder;
 
     private State state = State.WAITING_FOR_BETS;
     private IDealerHand dealer;
     private int activeSlot;
     private boolean willShuffle;
 
-    private IShuffler shuffler;
-    private IShoe shoe;
+    private IShuffler<AbstractCard> shuffler;
+    private IShoe<AbstractCard> shoe;
 
     public Table(int seats, int minBet, int maxBet) {
         if (seats <= 0) {
@@ -161,12 +161,12 @@ public class Table implements IGameTable {
     }
 
     @Override
-    public void setShuffler(IShuffler shuffler) {
+    public void setShuffler(IShuffler<AbstractCard> shuffler) {
         this.shuffler = shuffler;
     }
 
     @Override
-    public void setShoe(IShoe shoe) {
+    public void setShoe(IShoe<AbstractCard> shoe) {
         this.shoe = shoe;
     }
 

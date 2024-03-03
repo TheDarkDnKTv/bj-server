@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.Collection;
 import java.util.Set;
 
-public interface IShoe {
+public interface IShoe<T extends ICard> {
 
     Logger LOG = LogManager.getLogger();
 
@@ -22,7 +22,7 @@ public interface IShoe {
 
     int getCardsLeft();
 
-    ICard pop();
+    T pop();
 
-    void shuffle(IShuffler shuffler, Collection<ICard> holder);
+    void shuffle(IShuffler<T> shuffler, Collection<T> holder);
 }

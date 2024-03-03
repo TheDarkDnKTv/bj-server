@@ -13,13 +13,10 @@ public interface ICard extends Comparable<ICard> {
 
     String represent();
 
-    default Comparator<ICard> getComparator() {
-        return Comparator.comparing(ICard::getRank)
-                .thenComparing(ICard::getSuit);
-    }
-
     @Override
     default int compareTo(ICard o) {
-        return this.getComparator().compare(this, o);
+        return Comparator.comparing(ICard::getRank)
+                .thenComparing(ICard::getSuit)
+                .compare(this, o);
     }
 }

@@ -1,6 +1,6 @@
 package thedarkdnktv.openbjs.core;
 
-public interface IGameTable {
+public interface IGameTable<T extends ICard> {
 
     void init();
 
@@ -24,9 +24,9 @@ public interface IGameTable {
 
     void setBet(int slot, double bet);
 
-    void setShoe(IShoe shoe);
+    void setShoe(IShoe<T> shoe);
 
-    void setShuffler(IShuffler shuffler);
+    void setShuffler(IShuffler<T> shuffler);
 
     enum State {
         WAITING_FOR_BETS,

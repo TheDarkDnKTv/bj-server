@@ -6,10 +6,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-public final class Shoe implements IShoe {
+public final class Shoe implements IShoe<AbstractCard> {
 
-    private final LinkedList<ICard> shoe = new LinkedList<>();
+    private final LinkedList<AbstractCard> shoe = new LinkedList<>();
     private final Set<ICard> deckSample;
     private final int deckCount;
 
@@ -39,11 +40,11 @@ public final class Shoe implements IShoe {
 
     @Override
     public int getCardsLeft() {
-        return this.shoe.size();
+        return Math.max(0, this.shoe.size() - 1);
     }
 
     @Override
-    public ICard pop() {
+    public AbstractCard pop() {
         var card = this.shoe.removeLast();
         if (card == Card.CUTTING_CARD) {
             this.needShuffle = true;
@@ -64,19 +65,30 @@ public final class Shoe implements IShoe {
     }
 
     @Override
-    public void shuffle(IShuffler shuffler, Collection<ICard> holder) {
+    public void shuffle(IShuffler<AbstractCard> shuffler, Collection<AbstractCard> holder) {
         this.shoe.addAll(holder);
         shuffler.shuffle(this.shoe);
-        var result = shuffler.validate(this.shoe);
+        var result = shuffler.validate(this.getDeckSample(), this.getDeckCount(), this.shoe);
         this.valid = result == IShuffler.VALID;
         this.needShuffle = false;
 
         if (!this.valid) {
-            LOG.error("Unable to validate shoe: {}", this, new RuntimeException(result.error()));
+            LOG.error("Unable to validate shoe: {}", this, new RuntimeException(result.getError()));
         }
     }
 
     private void fill() {
-        // TODO
+        this.shoe.clear();
+        this.needShuffle = true;
+        this.valid = false;
+        for (var i = 0; i < this.getDeckCount(); i++) {
+            this.shoe.addAll(this.createDeck(i));
+        }
+    }
+
+    private Set<AbstractCard> createDeck(int id) {
+        return this.getDeckSample().stream()
+                .map((card) -> new Card(card.getRank(), card.getSuit(), id))
+                .collect(Collectors.toSet());
     }
 }

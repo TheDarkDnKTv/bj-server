@@ -18,27 +18,27 @@ public class Card extends AbstractCard {
 	private final Rank rank;
 	private final Suit suit;
 	/** For debug purpuses only, to control a duplicates in shoe */
-	private int deckID = 0;
+	private int deckId = 0;
 	
 	/** Use <b>only this</b> instance to cut off a shoe halfs */
 	public static final Card CUTTING_CARD = new Card(null, null, -1);
 	
-	private Card(Rank rank, Suit suit, int deckID) {
+	public Card(Rank rank, Suit suit, int deckId) {
 		this.rank = rank;
 		this.suit = suit;
-		this.deckID = deckID;
+		this.deckId = deckId;
 	}
 	
 	/**
 	 * The factory method
 	 * @return a new single deck of cards
 	 */
-	public static Collection<Card> getDeck(int deckID) {
+	public static Collection<Card> getDeck(int deckId) {
 		ArrayList<Card> deck = new ArrayList<>();
 		
 		for (Suit suit : Suit.values()) {
 			for (Rank rank : Rank.values()) {
-				deck.add(new Card(rank, suit, deckID));
+				deck.add(new Card(rank, suit, deckId));
 			}
 		}
 		
@@ -71,28 +71,29 @@ public class Card extends AbstractCard {
 	public Suit getSuit() {
 		return suit;
 	}
-	
-	public int getDeckID() {
-		return deckID;
+
+	@Override
+	public int getId() {
+		return this.deckId;
 	}
-	
+
 	/*
 	 * Overrrides
 	 */
 	@Override
 	public String toString() {
-		return suit == null || rank == null ? "CUTTING_CARD" : "[#" + this.deckID + "]" + this.represent();
+		return suit == null || rank == null ? "CUTTING_CARD" : "[#" + this.deckId + "]" + this.represent();
 	}
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.suit, this.rank, this.deckID);
+		return Objects.hash(this.suit, this.rank, this.deckId);
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Card crd) {
-			return crd.deckID == this.deckID && crd.rank == this.rank && crd.suit == this.suit;
+			return crd.deckId == this.deckId && crd.rank == this.rank && crd.suit == this.suit;
 		}
 		
 		return false;
