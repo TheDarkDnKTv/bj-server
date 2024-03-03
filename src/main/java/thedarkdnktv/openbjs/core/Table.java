@@ -1,12 +1,18 @@
 package thedarkdnktv.openbjs.core;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import thedarkdnktv.openbjs.core.IHand.*;
 import thedarkdnktv.openbjs.util.Timer;
 
 import java.time.Duration;
 import java.util.LinkedList;
 
-public class Table implements IGameTable<AbstractCard> {
+import static thedarkdnktv.openbjs.Logging.TABLE_EVENTS;
+
+public class Table implements IGameTable<AbstractCard>, Identifiable {
+
+    protected static final Logger LOG = LogManager.getLogger();
 
     protected static final Duration TIME_BETTING    = Duration.ofSeconds(30);
     protected static final Duration TIME_DEAL       = Duration.ofMillis(400);
@@ -14,6 +20,7 @@ public class Table implements IGameTable<AbstractCard> {
 
     private final Timer timer = new Timer();
 
+    private final int id;
     private final int minBet;
     private final int maxBet;
     private final IHand[] slots;
@@ -28,7 +35,8 @@ public class Table implements IGameTable<AbstractCard> {
     private IShuffler<AbstractCard> shuffler;
     private IShoe<AbstractCard> shoe;
 
-    public Table(int seats, int minBet, int maxBet) {
+    public Table(int id, int seats, int minBet, int maxBet) {
+        this.id = id;
         if (seats <= 0) {
             throw new IllegalArgumentException("Seats count can not be less or equals 0");
         }
@@ -41,7 +49,7 @@ public class Table implements IGameTable<AbstractCard> {
 
     @Override
     public void init() {
-
+        LOG.debug(TABLE_EVENTS, "[TABLE#{}] Init of table", this.getId());
         this.dealer = new DealerHand();
         for (var i = 0; i < this.slots.length; i++) {
             this.slots[i] = new Hand();
@@ -50,10 +58,12 @@ public class Table implements IGameTable<AbstractCard> {
 
     @Override
     public void update() {
+        LOG.debug(TABLE_EVENTS, "[TABLE#{}] Update loop", this.getId());
         switch (this.getState()) {
             case BETTING_TIME: {
                 if (timer.tick()) {
                     this.setDealing();
+                    LOG.info(TABLE_EVENTS, "[TABLE#{}] Bets are closed", this.getId());
                 }
 
                 break;
@@ -65,6 +75,7 @@ public class Table implements IGameTable<AbstractCard> {
                         this.doDeal(this.dealer);
                         if (this.dealer.getState() != HandState.DEALING) {
                             this.setInGame();
+                            LOG.info(TABLE_EVENTS, "[TABLE#{}] Cards dealt, starting game", this.getId());
                         }
                     } else do {
                         if (this.doSlotRotation()) {
@@ -80,6 +91,7 @@ public class Table implements IGameTable<AbstractCard> {
                     } while (true);
 
                     if (!this.isWillShuffle() && this.shoe.isNeedShuffle()) {
+                        LOG.debug(TABLE_EVENTS, "[TABLE#{}] Shoe shuffle scheduled", this.getId());
                         this.setWillShuffle(true);
                     }
                 }
@@ -99,6 +111,7 @@ public class Table implements IGameTable<AbstractCard> {
                                 break;
                             }
 
+                            LOG.info(TABLE_EVENTS, "[TABLE#{}] Player decision timeout", this.getId());
                             hand.setState(HandState.TURN_OVER);
                         }
                         default: {
@@ -120,6 +133,7 @@ public class Table implements IGameTable<AbstractCard> {
                         this.doDeal(this.dealer);
                     } else if (this.dealer.getState() == HandState.TURN_OVER) {
                         this.setGameResolved();
+                        LOG.info(TABLE_EVENTS, "[TABLE#{}] Game resolved", this.getId());
                     }
                 }
 
@@ -218,6 +232,16 @@ public class Table implements IGameTable<AbstractCard> {
         this.shoe = shoe;
     }
 
+    @Override
+    public int getId() {
+        return this.id;
+    }
+
+    protected void setState(State state) {
+        this.state = state;
+        LOG.debug(TABLE_EVENTS, "[TABLE#{}] Setting state {}", this.getId(), state);
+    }
+
     protected boolean isWillShuffle() {
         return this.willShuffle;
     }
@@ -238,16 +262,18 @@ public class Table implements IGameTable<AbstractCard> {
     protected void doDeal(IHand hand) {
         var card = this.shoe.pop();
         this.holder.add(card);
+        LOG.trace(TABLE_EVENTS, "[TABLE#{}] Dealing card {} for hand {}", this.getId(), card, hand);
         hand.apply(card);
     }
 
     protected void setBettingTime() {
-        this.state = State.BETTING_TIME;
+        this.setState(State.BETTING_TIME);
         this.timer.setTime(TIME_BETTING);
     }
 
     protected void setInGame() {
-        this.state = State.IN_GAME;
+        LOG.debug(TABLE_EVENTS, "[TABLE#{}] Setting IN_GAME", this.getId());
+        this.setState(State.IN_GAME);
         this.activeSlot = 0;
         this.isDealerTurn = false;
         this.timer.setTime(TIME_DECISION);
@@ -265,7 +291,7 @@ public class Table implements IGameTable<AbstractCard> {
         }
 
         if (hasBets) {
-            this.state = State.DEALING;
+            this.setState(State.DEALING);
             this.timer.setTime(TIME_DEAL);
             this.dealer.setState(HandState.DEALING);
             this.activeSlot = 0;
@@ -275,7 +301,7 @@ public class Table implements IGameTable<AbstractCard> {
     }
 
     protected void setWaiting() {
-        this.state = State.WAITING_FOR_BETS;
+        this.setState(State.WAITING_FOR_BETS);
         this.activeSlot = 0;
         this.isDealerTurn = false;
         this.dealer.reset();
@@ -285,7 +311,7 @@ public class Table implements IGameTable<AbstractCard> {
     }
 
     protected void setGameResolved() {
-        this.state = State.GAME_RESOLVED;
+        this.setState(State.GAME_RESOLVED);
         this.activeSlot = 0;
     }
 
