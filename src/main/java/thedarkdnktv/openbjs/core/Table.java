@@ -3,6 +3,8 @@ package thedarkdnktv.openbjs.core;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import thedarkdnktv.openbjs.core.IHand.*;
+import thedarkdnktv.openbjs.enums.Decision;
+import thedarkdnktv.openbjs.exception.DecisionNotPossibleException;
 import thedarkdnktv.openbjs.util.Timer;
 
 import java.time.Duration;
@@ -220,6 +222,33 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
         }
 
         return null;
+    }
+
+    @Override
+    public void setDecision(int slotIdx, Decision decision) throws DecisionNotPossibleException {
+        var state = this.getState();
+        if (state != State.DEALING && state != State.IN_GAME) {
+            throw new DecisionNotPossibleException("Table state is invalid: " + state);
+        }
+
+        var hand = this.getSlot(slotIdx);
+        if (hand == null) {
+            throw new DecisionNotPossibleException("Hand is not exists");
+        }
+
+        var handState = hand.getState();
+        if (handState != HandState.WAITING_TURN && handState != HandState.DECISION_REQUIRED) {
+            throw new DecisionNotPossibleException("Hand state is invalid: " + handState);
+        }
+
+        var allowedDecisions = hand.performableDecisions();
+        if (!allowedDecisions.contains(decision)) {
+            throw new DecisionNotPossibleException("Decision is not allowed: " + decision)
+                    .setAllowedDecisions(allowedDecisions);
+        }
+
+        LOG.debug(TABLE_EVENTS, "[TABLE#{}] Decision set for hand {}", this.getId(), hand);
+        hand.setDecision(decision);
     }
 
     @Override

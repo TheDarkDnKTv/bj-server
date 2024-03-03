@@ -1,5 +1,7 @@
 package thedarkdnktv.openbjs.core;
 
+import thedarkdnktv.openbjs.enums.Decision;
+
 public class DealerHand extends Hand implements IDealerHand {
 
     private boolean hiddenCardOpen;
@@ -18,6 +20,11 @@ public class DealerHand extends Hand implements IDealerHand {
     public void reset() {
         super.reset();
         this.hiddenCardOpen = false;
+    }
+
+    @Override
+    public void setDecision(Decision decision) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

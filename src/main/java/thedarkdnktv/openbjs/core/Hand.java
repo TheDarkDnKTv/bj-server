@@ -19,6 +19,7 @@ public class Hand implements IHand {
     protected double bet;
 
     protected HandState state;
+    protected Decision decision;
     protected IHand splitHand;
 
     public Hand() {
@@ -105,6 +106,16 @@ public class Hand implements IHand {
     }
 
     @Override
+    public void setDecision(Decision decision) {
+        this.decision = decision;
+    }
+
+    @Override
+    public Decision getDecision() {
+        return this.decision;
+    }
+
+    @Override
     public void reset() {
         this.hand.clear();
         this.score = 0;
@@ -113,6 +124,7 @@ public class Hand implements IHand {
         this.insured = false;
         this.doubled = false;
         this.splitHand = null;
+        this.decision = null;
         if (this.getState() != HandState.EMPTY) {
             this.setState(HandState.IDLE);
         }

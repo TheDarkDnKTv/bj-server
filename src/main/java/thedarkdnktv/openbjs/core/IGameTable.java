@@ -1,5 +1,8 @@
 package thedarkdnktv.openbjs.core;
 
+import thedarkdnktv.openbjs.enums.Decision;
+import thedarkdnktv.openbjs.exception.DecisionNotPossibleException;
+
 public interface IGameTable<T extends ICard> {
 
     void init();
@@ -15,6 +18,8 @@ public interface IGameTable<T extends ICard> {
     int getActiveSlot();
 
     IHand getSlot(int slot);
+
+    void setDecision(int slot, Decision decision) throws DecisionNotPossibleException;
 
     int getSlotCount();
 

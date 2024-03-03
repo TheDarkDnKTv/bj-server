@@ -31,6 +31,10 @@ public interface IHand {
 
     IHand doSplit();
 
+    void setDecision(Decision decision);
+
+    Decision getDecision();
+
     Set<Decision> performableDecisions();
 
     double getBet();
