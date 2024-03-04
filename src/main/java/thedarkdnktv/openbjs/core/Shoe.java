@@ -4,10 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import thedarkdnktv.openbjs.game.Card;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static thedarkdnktv.openbjs.Logging.SHOE_EVENTS;
@@ -54,11 +51,11 @@ public final class Shoe implements IShoe<AbstractCard>, Identifiable {
     @Override
     public AbstractCard pop() {
         var card = this.shoe.removeLast();
-        LOG.trace(SHOE_EVENTS, "[SHOE#{}] Popping card {}", this.getId(), card);
+        LOG.trace(SHOE_EVENTS, "SHOE#{} Popping card {}", this.getId(), card);
         if (card == Card.CUTTING_CARD) {
             this.needShuffle = true;
             card = this.shoe.removeLast();
-            LOG.trace(SHOE_EVENTS, "[SHOE#{}] It's cutting, next card {}", this.getId(), card);
+            LOG.trace(SHOE_EVENTS, "SHOE#{} It's cutting, next card {}", this.getId(), card);
         }
 
         return card;
@@ -76,7 +73,7 @@ public final class Shoe implements IShoe<AbstractCard>, Identifiable {
 
     @Override
     public void shuffle(IShuffler<AbstractCard> shuffler, Collection<AbstractCard> holder) {
-        LOG.debug(SHOE_EVENTS, "[SHOE#{}] Begin shuffle shoe", this.getId());
+        LOG.debug(SHOE_EVENTS, "SHOE#{} Begin shuffle shoe", this.getId());
         this.shoe.addAll(holder);
         shuffler.shuffle(this.shoe);
         var result = shuffler.validate(this.getDeckSample(), this.getDeckCount(), this.shoe);
@@ -87,7 +84,7 @@ public final class Shoe implements IShoe<AbstractCard>, Identifiable {
             LOG.atError()
                 .withMarker(SHOE_EVENTS)
                 .withThrowable(new RuntimeException(result.getError()))
-                .log("[SHOE#{}] Unable to validate shoe: {}", this.getId(), this);
+                .log("SHOE#{} Unable to validate shoe: {}", this.getId(), this);
         }
     }
 
@@ -97,13 +94,13 @@ public final class Shoe implements IShoe<AbstractCard>, Identifiable {
     }
 
     private void fill() {
-        LOG.trace(SHOE_EVENTS, "[SHOE#{}] Filling up shoe", this.getId());
+        LOG.trace(SHOE_EVENTS, "SHOE#{} Filling up shoe", this.getId());
         this.shoe.clear();
         this.needShuffle = true;
         this.valid = false;
         for (var i = 0; i < this.getDeckCount(); i++) {
             var deck = this.createDeck(i);
-            LOG.trace(SHOE_EVENTS, "[SHOE#{}] Creating deck id#{}, contents: {}", this.getId(), i, deck);
+            LOG.trace(SHOE_EVENTS, "SHOE#{} Creating deck id#{}, contents: {}", this.getId(), i, deck);
             this.shoe.addAll(deck);
         }
     }
@@ -111,6 +108,6 @@ public final class Shoe implements IShoe<AbstractCard>, Identifiable {
     private Set<AbstractCard> createDeck(int id) {
         return this.getDeckSample().stream()
                 .map((card) -> new Card(card.getRank(), card.getSuit(), id))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

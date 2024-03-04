@@ -11,7 +11,9 @@ public interface ICard extends Comparable<ICard> {
 
     Rank getRank();
 
-    String represent();
+    default String represent() {
+        return this.getSuit().symbol + this.getRank().denomination;
+    }
 
     @Override
     default int compareTo(ICard o) {

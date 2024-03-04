@@ -15,11 +15,6 @@ public abstract class AbstractCard implements ICard, Identifiable {
     public abstract Rank getRank();
 
     @Override
-    public String represent() {
-        return this.getSuit().symbol + this.getRank().denomination;
-    }
-
-    @Override
     public int compareTo(ICard o) {
         if (o instanceof AbstractCard o1) {
             return Comparator.comparing(AbstractCard::getRank)

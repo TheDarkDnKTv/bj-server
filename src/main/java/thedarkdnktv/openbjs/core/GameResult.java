@@ -33,7 +33,7 @@ public class GameResult {
             return;
         }
 
-        if (mine.getScore() > their.getScore()) {
+        if (mine.getScore() > their.getScore() || their.getScore() > BjUtil.MAX_SCORE) {
             this.payout = 2.0D;
             if (mine.isDoubled()) {
                 this.payout += 1.0D;

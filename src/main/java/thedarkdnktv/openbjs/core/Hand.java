@@ -16,6 +16,7 @@ public class Hand implements IHand {
     protected boolean doubled;
 
     protected boolean isSplit;
+    protected boolean ready;
     protected double bet;
 
     protected HandState state;
@@ -123,6 +124,7 @@ public class Hand implements IHand {
         this.soft = false;
         this.insured = false;
         this.doubled = false;
+        this.ready = false;
         this.splitHand = null;
         this.decision = null;
         if (this.getState() != HandState.EMPTY) {
@@ -181,6 +183,18 @@ public class Hand implements IHand {
         };
     }
 
+    @Override
+    public boolean isReady() {
+        return this.ready;
+    }
+
+    @Override
+    public void setReady() {
+        if (this.getState() == HandState.HAS_BET) {
+            this.ready = true;
+        }
+    }
+
     protected boolean checkIsBj() {
         if (this.hand.size() == 2) {
             var first = this.hand.get(0).getRank();
@@ -190,5 +204,26 @@ public class Hand implements IHand {
         }
 
         return false;
+    }
+
+    @Override
+    public String toString() {
+        var cards = new StringBuilder();
+        for (var card : this.hand) {
+            cards.append(card.toString());
+            cards.append(' ');
+        }
+
+        var len = cards.length() - 1;
+        if (len > 0) {
+            cards.deleteCharAt(len);
+        }
+
+        var score = this.getScore();
+        if (score <= BjUtil.SOFT_SCORE && this.isSoft()) {
+            score += 10;
+        }
+
+        return String.format("{ %s } - %s", cards, this.isBj() ? "BJ" : score);
     }
 }

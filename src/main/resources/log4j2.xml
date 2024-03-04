@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="ERROR" packages="thedarkdnktv.openbjs">
+    <Appenders>
+        <Console name="SysOut" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n%throwable" />
+            <Filters>
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="fatal" onMatch="DENY"  onMismatch="NEUTRAL"/>
+            </Filters>
+        </Console>
+        <Console name="SysErr" target="SYSTEM_ERR">
+            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n%throwable" />
+            <Filters>
+                <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+                <ThresholdFilter level="fatal" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+        </Console>
+<!--        <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">-->
+<!--            <PatternLayout>-->
+<!--            	<LoggerNameSelector defaultPattern="[%d{HH:mm:ss}] [%logger/%level]: %msg%n">-->
+<!--            		<PatternMatch key="thedarkdnktv.openbjs." pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n%throwable"/>-->
+<!--            	</LoggerNameSelector>-->
+<!--            </PatternLayout>-->
+<!--            <Policies>-->
+<!--                <TimeBasedTriggeringPolicy />-->
+<!--                <OnStartupTriggeringPolicy />-->
+<!--            </Policies>-->
+<!--        </RollingRandomAccessFile>-->
+    </Appenders>
+    <Loggers>
+        <Root level="debug">
+        	<AppenderRef ref="SysErr"/>
+            <AppenderRef ref="SysOut"/>
+<!--            <AppenderRef ref="File"/>  -->
+            <filters>
+                <MarkerFilter marker="GAME_EVENTS" onMatch="DENY" onMismatch="NEUTRAL" />
+<!--                <MarkerFilter marker="TABLE_EVENTS" onMatch="ACCEPT" onMismatch="NEUTRAL" />-->
+<!--                <MarkerFilter marker="SHOE_EVENTS" onMatch="DENY" onMismatch="NEUTRAL" />-->
+            </filters>
+        </Root>
+    </Loggers>
+</Configuration>

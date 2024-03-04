@@ -19,13 +19,15 @@ public interface IGameTable<T extends ICard> {
 
     IHand getSlot(int slot);
 
+    IDealerHand getDealerHand();
+
     void setDecision(int slot, Decision decision) throws DecisionNotPossibleException;
 
     int getSlotCount();
 
-    int getMinBet();
+    double getMinBet();
 
-    int getMaxBet();
+    double getMaxBet();
 
     void setBet(int slot, double bet);
 

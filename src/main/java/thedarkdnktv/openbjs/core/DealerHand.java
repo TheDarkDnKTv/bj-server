@@ -23,6 +23,11 @@ public class DealerHand extends Hand implements IDealerHand {
     }
 
     @Override
+    public boolean isReady() {
+        return true;
+    }
+
+    @Override
     public void setDecision(Decision decision) {
         throw new UnsupportedOperationException();
     }

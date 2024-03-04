@@ -41,6 +41,10 @@ public interface IHand {
 
     void setBet(double value);
 
+    boolean isReady();
+
+    void setReady();
+
     void reset();
 
     enum HandState {
