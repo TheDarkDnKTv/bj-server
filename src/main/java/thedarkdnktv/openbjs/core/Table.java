@@ -3,6 +3,10 @@ package thedarkdnktv.openbjs.core;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import thedarkdnktv.openbjs.core.IHand.*;
+import thedarkdnktv.openbjs.core.event.TableCardDealtEvent;
+import thedarkdnktv.openbjs.core.event.TableDecisionPerformedEvent;
+import thedarkdnktv.openbjs.core.event.TableStateEvent;
+import thedarkdnktv.openbjs.core.event.TableTurnEvent;
 import thedarkdnktv.openbjs.enums.Decision;
 import thedarkdnktv.openbjs.exception.DecisionNotPossibleException;
 import thedarkdnktv.openbjs.util.Timer;
@@ -26,9 +30,10 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
     private final double minBet;
     private final double maxBet;
     private final IHand[] slots;
+    private final IEventBus events;
     private final LinkedList<AbstractCard> holder;
 
-    private State state = State.WAITING_FOR_BETS;
+    private State state;
     private IDealerHand dealer;
     private int activeSlot;
     private boolean dealerTurn;
@@ -37,7 +42,7 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
     private IShuffler<AbstractCard> shuffler;
     private IShoe<AbstractCard> shoe;
 
-    public Table(int id, int seats, double minBet, double maxBet) {
+    public Table(int id, int seats, double minBet, double maxBet, IEventBus bus) {
         this.id = id;
         if (seats <= 0) {
             throw new IllegalArgumentException("Seats count can not be less or equals 0");
@@ -46,6 +51,7 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
         this.minBet = minBet;
         this.maxBet = maxBet;
         this.slots = new IHand[seats];
+        this.events = bus;
         this.holder = new LinkedList<>();
     }
 
@@ -57,6 +63,7 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
             this.slots[i] = new Hand();
         }
 
+        this.setState(State.WAITING_FOR_BETS);
         if (this.shoe.isNeedShuffle()) {
             this.shoe.shuffle(this.shuffler, this.holder);
         }
@@ -78,16 +85,17 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
                 if (timer.tick()) {
                     if (this.dealerTurn) {
                         this.dealerTurn = false;
-                        this.doDeal(this.dealer);
+                        this.doDeal(this.dealer, -1);
                         if (this.dealer.getState() != HandState.DEALING) {
                             this.setInGame();
                             LOG.info(TABLE_EVENTS, "TABLE#{} Cards dealt, starting game", this.getId());
                         }
                     } else do {
-                        var hand = this.getCurrentSlot();
+                        var handId = this.getActiveSlot();
+                        var hand = this.getSlot(handId);
                         var willDeal = hand.getState() == HandState.DEALING;
                         if (willDeal) {
-                            this.doDeal(hand);
+                            this.doDeal(hand, handId);
                         }
 
                         this.dealerTurn = this.doSlotRotation();
@@ -106,15 +114,17 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
             }
             case IN_GAME: {
                 if (!this.dealerTurn) {
-                    var hand = this.getCurrentSlot();
+                    var handId = this.getActiveSlot();
+                    var hand = this.getSlot(handId);
                     switch (hand.getState()) {
                         case WAITING_TURN: {
                             hand.setState(HandState.DECISION_REQUIRED);
+                            events.post(new TableTurnEvent(id, handId));
                             break;
                         }
                         case DECISION_REQUIRED: {
                             if (hand.getDecision() != null) {
-                                this.performDecision(hand);
+                                this.performDecision(handId, hand);
                             }
 
                             if (!this.timer.tick()) {
@@ -141,7 +151,7 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
                     }
 
                     if (this.dealer.getState() == HandState.DECISION_REQUIRED) {
-                        this.doDeal(this.dealer); // TODO up to 17
+                        this.doDeal(this.dealer, -1); // TODO up to 17
                     } else if (this.dealer.getState() == HandState.TURN_OVER) {
                         this.setGameResolved();
                         LOG.info(TABLE_EVENTS, "TABLE#{} Game resolved", this.getId());
@@ -282,6 +292,7 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
 
     protected void setState(State state) {
         this.state = state;
+        this.events.post(new TableStateEvent(this.id, state));
         LOG.debug(TABLE_EVENTS, "TABLE#{} Setting state {}", this.getId(), state);
     }
 
@@ -302,24 +313,30 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
         return false;
     }
 
-    protected void doDeal(IHand hand) {
+    protected void doDeal(IHand hand, int handId) {
         var card = this.shoe.pop();
         this.holder.add(card);
         LOG.debug(TABLE_EVENTS, "TABLE#{} Dealing card {} for hand {}", this.getId(), card, hand);
         hand.apply(card);
+        events.post(new TableCardDealtEvent(id, handId, card));
     }
 
-    protected void performDecision(IHand hand) {
-        switch (hand.getDecision()) {
+    protected void performDecision(int handId, IHand hand) {
+        final var decision = hand.getDecision();
+        switch (decision) {
             case HIT, DOUBLE_DOWN -> {
-                this.doDeal(hand);
+                this.doDeal(hand, handId);
             }
             case SPLIT -> {
                 // TODO
             }
+            case STAND -> {
+                hand.setState(HandState.TURN_OVER);
+            }
         }
 
         hand.setDecision(null);
+        events.post(new TableDecisionPerformedEvent(id, handId, decision, hand.getState()));
     }
 
     protected void setBettingTime() {
