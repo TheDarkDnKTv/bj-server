@@ -72,6 +72,16 @@ public class Hand implements IHand {
     }
 
     @Override
+    public int getTotalScore() {
+        var score = this.getScore();
+        if (score <= BjUtil.SOFT_SCORE && this.isSoft()) {
+            score += 10;
+        }
+
+        return score;
+    }
+
+    @Override
     public int getScore() {
         return this.score;
     }
@@ -220,10 +230,15 @@ public class Hand implements IHand {
         }
 
         var score = this.getScore();
-        if (score <= BjUtil.SOFT_SCORE && this.isSoft()) {
-            score += 10;
+        String scoreStr;
+        if (this.isBj()) {
+            scoreStr = "BJ";
+        } else if (score <= BjUtil.SOFT_SCORE && this.isSoft()) {
+            scoreStr = score + "/" + (score + 10);
+        } else {
+            scoreStr = Integer.toString(score);
         }
 
-        return String.format("{ %s } - %s", cards, this.isBj() ? "BJ" : score);
+        return String.format("{ %s } - %s", cards, scoreStr);
     }
 }

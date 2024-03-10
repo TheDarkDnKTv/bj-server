@@ -16,7 +16,7 @@ public class GameResult {
         this.payout = 0.0D;
 
         // Too many
-        if (mine.getScore() > BjUtil.MAX_SCORE) {
+        if (mine.isTooMany()) {
             return;
         }
 
@@ -33,12 +33,17 @@ public class GameResult {
             return;
         }
 
-        if (mine.getScore() > their.getScore() || their.getScore() > BjUtil.MAX_SCORE) {
+        if (mine.isBj()) {
+            payout = 1.5D;
+            return;
+        }
+
+        if (mine.getTotalScore() > their.getTotalScore() || their.isTooMany()) {
             this.payout = 2.0D;
             if (mine.isDoubled()) {
                 this.payout += 1.0D;
             }
-        } else if (mine.getScore() == their.getScore()) {
+        } else if (mine.getTotalScore() == their.getTotalScore()) {
             this.payout = 1.0D; // push
         }
     }
@@ -53,5 +58,9 @@ public class GameResult {
         }
 
         return this.payout;
+    }
+
+    public double getBet() {
+        return this.mine.getBet();
     }
 }

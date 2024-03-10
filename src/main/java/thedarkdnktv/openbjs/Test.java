@@ -22,9 +22,8 @@ public class Test {
     private final Logger LOG = LogManager.getLogger("thedarkdnktv.bjclient");
 
     LinkedList<Runnable> tasks = new LinkedList<>();
-    private boolean notified;
-    private Table table;
-    double balance = 100;
+    Table table;
+    volatile double balance = 100;
 
     IEventBus bus = new GuavaEventBus();
 
@@ -133,16 +132,19 @@ public class Test {
                 int id = Integer.parseInt(args[1]);
                 if (id < 1 || id > table.getSlotCount()) {
                     LOG.info("Please type valid value");
+                    return;
                 }
 
                 double bet = Double.parseDouble(args[2]);
                 if (bet < table.getMinBet() || bet > table.getMaxBet()) {
                     LOG.info("Please ({}) enter bet in range {}-{}", bet, table.getMinBet(), table.getMaxBet());
+                    return;
                 }
 
                 final var id1 = id - 1;
                 final var bet1 = bet;
                 tasks.push(() -> {
+                    balance -= bet1;
                     table.setBet(id1, bet1);
                     LOG.info("Bet placed");
                 });
@@ -152,12 +154,14 @@ public class Test {
         } else if (command.startsWith("ready")) {
             try {
                 var id = Integer.parseInt(args[1]);
-                if (id >= 1 || id <= table.getSlotCount()) {
+                if (id < 1 || id > table.getSlotCount()) {
                     LOG.info("Please type valid value");
-                    var slot = table.getSlot(id - 1);
-                    slot.setReady();
-                    LOG.info("Seat {} ready: {}", id, slot.isReady());
+                    return;
                 }
+
+                var slot = table.getSlot(id - 1);
+                slot.setReady();
+                LOG.info("Seat {} ready: {}", id, slot.isReady());
             } catch (Exception e) {
                 LOG.info("Incorrect input");
             }
@@ -184,6 +188,12 @@ public class Test {
                     var hs = result == null ? "NONE" : result.isWin() ? "WIN" : "LOSE";
                     LOG.printf(Level.INFO, "\t%-5s | %-10s | %.1f | %-20s", i, hs,
                             result == null ? 0.0D : result.getPayout(), table.getSlot(i));
+
+                    if (result != null && result.isWin()) {
+                        tasks.push(() -> {
+                            balance += (result.getBet() * result.getPayout());
+                        });
+                    }
                 }
             }
         }
@@ -193,26 +203,39 @@ public class Test {
     public void handleDecisionDone(TableDecisionPerformedEvent event) {
         var slot = table.getSlot(event.handId);
         var score = slot.getScore();
+        String scoreStr;
+        if (score <= BjUtil.SOFT_SCORE && slot.isSoft()) {
+            scoreStr = score + "/" + (score + 10);
+        } else {
+            scoreStr = Integer.toString(score);
+        }
+
         if (event.state == IHand.HandState.TURN_OVER) {
             if (score > BjUtil.MAX_SCORE) {
                 LOG.info("It's too many ({})", score);
             } else {
-                LOG.info("Score: {}", score);
+                LOG.info("Score: {}", scoreStr);
             }
         } else {
-            LOG.info("Score: {}, your next turn?", score);
+            LOG.info("Score: {}, your next turn?", scoreStr);
         }
     }
 
     @Subscribe
     public void handleDecisionNeeded(TableTurnEvent event) {
-        var slot = table.getSlot(event.handId);
-        LOG.info("{} hand turn, hand is {}", event.handId + 1, slot);
+        if (event.isDealer()) {
+            LOG.info("Dealer turn, hand is {}", table.getDealerHand());
+        } else {
+            var slot = table.getSlot(event.handId);
+            LOG.info("{} hand turn, hand is {}", event.handId + 1, slot);
+        }
     }
 
     @Subscribe
     public void handleCardDealt(TableCardDealtEvent event) {
-        if (event.handId != -1 || table.getState() == IGameTable.State.IN_GAME) {
+        if (event.hidden) {
+            LOG.info("Card dealt: {}", "<hidden>");
+        } else {
             LOG.info("Card dealt: {}", event.card);
         }
     }

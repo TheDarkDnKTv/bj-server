@@ -28,6 +28,14 @@ public class DealerHand extends Hand implements IDealerHand {
     }
 
     @Override
+    public void apply(ICard card) {
+        super.apply(card);
+        if (this.hand.size() >= 2 && this.getTotalScore() > BjUtil.DEALER_DRAW_SCORE) {
+            this.setState(HandState.TURN_OVER);
+        }
+    }
+
+    @Override
     public void setDecision(Decision decision) {
         throw new UnsupportedOperationException();
     }

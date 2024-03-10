@@ -146,12 +146,18 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
                 } else if (this.timer.tick()) { // Dealing dealer's hand
                     if (!this.dealer.isHiddenCardOpen()) {
                         this.dealer.setHiddenCardOpen();
-                        this.dealer.setState(HandState.DECISION_REQUIRED);
+                        if (this.isGameResultDefined()) {
+                            this.dealer.setState(HandState.TURN_OVER);
+                        } else if (this.dealer.getState() != HandState.TURN_OVER) {
+                            events.post(new TableTurnEvent(id, -1));
+                            this.dealer.setState(HandState.DECISION_REQUIRED);
+                        }
+
                         break;
                     }
 
                     if (this.dealer.getState() == HandState.DECISION_REQUIRED) {
-                        this.doDeal(this.dealer, -1); // TODO up to 17
+                        this.doDeal(this.dealer, -1);
                     } else if (this.dealer.getState() == HandState.TURN_OVER) {
                         this.setGameResolved();
                         LOG.info(TABLE_EVENTS, "TABLE#{} Game resolved", this.getId());
@@ -318,7 +324,10 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
         this.holder.add(card);
         LOG.debug(TABLE_EVENTS, "TABLE#{} Dealing card {} for hand {}", this.getId(), card, hand);
         hand.apply(card);
-        events.post(new TableCardDealtEvent(id, handId, card));
+        var hidden = state == State.DEALING &&
+                hand instanceof IDealerHand dealerHand &&
+                dealerHand.getOpenCard() != card;
+        events.post(new TableCardDealtEvent(id, handId, card, hidden));
     }
 
     protected void performDecision(int handId, IHand hand) {
@@ -395,9 +404,20 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
     }
 
     protected boolean canResultBeDefined(IHand slot) {
-        return slot.getScore() > BjUtil.MAX_SCORE ||
-                this.dealer.getState() == HandState.TURN_OVER ||
+        return slot.isTooMany() || this.dealer.getState() == HandState.TURN_OVER ||
                 (slot.isBj() && (slot == this.dealer || this.dealer.getOpenCard().getRank().value < 10));
+    }
+
+    protected boolean isGameResultDefined() {
+        for (var slot : this.slots) {
+            if (slot.getState() == HandState.TURN_OVER) {
+                if (!slot.isTooMany() && !slot.isBj()) {
+                    return false;
+                }
+            }
+        }
+
+        return this.dealer.getState() == HandState.TURN_OVER;
     }
 
     protected boolean isPlayersReady() {

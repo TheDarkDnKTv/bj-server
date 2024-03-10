@@ -1,7 +1,6 @@
 package thedarkdnktv.openbjs.core;
 
 import thedarkdnktv.openbjs.enums.Decision;
-import thedarkdnktv.openbjs.game.Card;
 
 import java.util.Set;
 
@@ -15,6 +14,8 @@ public interface IHand {
 
     int getScore();
 
+    int getTotalScore();
+
     boolean isBj();
 
     boolean isSoft();
@@ -22,6 +23,10 @@ public interface IHand {
     boolean isInsured();
 
     boolean isDoubled();
+
+    default boolean isTooMany() {
+        return this.getScore() > BjUtil.MAX_SCORE;
+    }
 
     void setInsured();
 
