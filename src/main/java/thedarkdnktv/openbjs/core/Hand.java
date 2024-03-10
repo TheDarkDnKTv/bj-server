@@ -7,7 +7,7 @@ import java.util.*;
 
 public class Hand implements IHand {
 
-    protected final List<ICard> hand = new LinkedList<>();
+    protected final LinkedList<ICard> hand = new LinkedList<>();
 
     protected int score;
     protected boolean bj;
@@ -176,12 +176,9 @@ public class Hand implements IHand {
                 if (!this.checkIsBj()) {
                     result.add(Decision.STAND);
                     result.add(Decision.HIT);
-                    if (this.hand.size() == 2 && !this.isSplit) {
-                        if (this.getScore() <= BjUtil.DOUBLE_DOWN_SCORE) {
-                            result.add(Decision.DOUBLE_DOWN);
-                        }
-
-                        if (this.getScore() == BjUtil.SPLIT_SCORE && this.isSoft()) {
+                    if (this.hand.size() == 2 && !this.hasDoneSplit()) {
+                        result.add(Decision.DOUBLE_DOWN);
+                        if (this.hasPairs()) {
                             result.add(Decision.SPLIT);
                         }
                     }
@@ -211,6 +208,18 @@ public class Hand implements IHand {
             var second = this.hand.get(1).getRank();
             return (first == Rank.ACE && second.value == 10) ||
                     (second == Rank.ACE && first.value == 10);
+        }
+
+        return false;
+    }
+
+    protected boolean hasDoneSplit() {
+        return this.isSplit || this.getSplitHand() != null;
+    }
+
+    protected boolean hasPairs() {
+        if (this.hand.size() >= 2) {
+            return this.hand.get(0).getRank() == this.hand.get(1).getRank();
         }
 
         return false;

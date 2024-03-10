@@ -337,11 +337,16 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
                 this.doDeal(hand, handId);
             }
             case SPLIT -> {
-                // TODO
+                // TODO split
             }
             case STAND -> {
                 hand.setState(HandState.TURN_OVER);
             }
+        }
+
+        if (decision == Decision.DOUBLE_DOWN) {
+            hand.setDoubled();
+            hand.setState(HandState.TURN_OVER);
         }
 
         hand.setDecision(null);
@@ -409,15 +414,16 @@ public class Table implements IGameTable<AbstractCard>, Identifiable {
     }
 
     protected boolean isGameResultDefined() {
+        var hadBj = false;
         for (var slot : this.slots) {
             if (slot.getState() == HandState.TURN_OVER) {
-                if (!slot.isTooMany() && !slot.isBj()) {
+                if (!slot.isTooMany() && !(hadBj |= slot.isBj())) {
                     return false;
                 }
             }
         }
 
-        return this.dealer.getState() == HandState.TURN_OVER;
+        return !hadBj || this.dealer.isBj();
     }
 
     protected boolean isPlayersReady() {

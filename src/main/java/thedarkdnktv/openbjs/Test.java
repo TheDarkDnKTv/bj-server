@@ -1,6 +1,7 @@
 package thedarkdnktv.openbjs;
 
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.AtomicDouble;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +24,7 @@ public class Test {
 
     LinkedList<Runnable> tasks = new LinkedList<>();
     Table table;
-    volatile double balance = 100;
+    AtomicDouble balance = new AtomicDouble(100.0D);
 
     IEventBus bus = new GuavaEventBus();
 
@@ -103,18 +104,20 @@ public class Test {
                 };
 
                 LOG.info("Decision for {}: {}", id, decision);
-                if (decision == Decision.SPLIT || decision == Decision.DOUBLE_DOWN) {
-                    if (balance < slot.getBet()) {
+                var needExtraBet = decision == Decision.SPLIT || decision == Decision.DOUBLE_DOWN;
+                if (needExtraBet) {
+                    if (balance.get() < slot.getBet()) {
                         LOG.info("Not enough money");
                         return;
                     }
-
-                    balance -= slot.getBet();
                 }
 
                 tasks.push(() -> {
                     try {
                         table.setDecision(id, decision);
+                        if (needExtraBet) {
+                            balance.getAndAdd(-slot.getBet());
+                        }
                     } catch (DecisionNotPossibleException e) {
                         LOG.info("Decision is not possible ({}): {}", e.getMessage(), e.getAllowedDecisions());
                     }
@@ -123,7 +126,7 @@ public class Test {
                 LOG.info("Incorrect input");
             }
         } else if (command.startsWith("bet")) {
-            if (balance < table.getMinBet()) {
+            if (balance.get() < table.getMinBet()) {
                 LOG.info("You have insufficient balance");
                 return;
             }
@@ -144,8 +147,8 @@ public class Test {
                 final var id1 = id - 1;
                 final var bet1 = bet;
                 tasks.push(() -> {
-                    balance -= bet1;
                     table.setBet(id1, bet1);
+                    balance.getAndAdd(-bet1);
                     LOG.info("Bet placed");
                 });
             } catch (Exception e) {
@@ -185,13 +188,15 @@ public class Test {
                 LOG.info("\tDealer hand is {}", table.getDealerHand());
                 for (var i = 0; i < table.getSlotCount(); i++) {
                     var result = table.getResult(i);
-                    var hs = result == null ? "NONE" : result.isWin() ? "WIN" : "LOSE";
+                    var hs = result == null ? "NONE" :
+                            result.isWin() ? "WIN" :
+                                    result.isPush() ? "PUSH" : "LOSE";
                     LOG.printf(Level.INFO, "\t%-5s | %-10s | %.1f | %-20s", i, hs,
                             result == null ? 0.0D : result.getPayout(), table.getSlot(i));
 
                     if (result != null && result.isWin()) {
                         tasks.push(() -> {
-                            balance += (result.getBet() * result.getPayout());
+                            balance.getAndAdd(result.getBet() * result.getPayout());
                         });
                     }
                 }

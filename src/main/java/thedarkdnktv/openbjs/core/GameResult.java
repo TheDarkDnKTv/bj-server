@@ -34,14 +34,14 @@ public class GameResult {
         }
 
         if (mine.isBj()) {
-            payout = 1.5D;
+            payout = 2.5D;
             return;
         }
 
         if (mine.getTotalScore() > their.getTotalScore() || their.isTooMany()) {
             this.payout = 2.0D;
             if (mine.isDoubled()) {
-                this.payout += 1.0D;
+                this.payout += 2.0D;
             }
         } else if (mine.getTotalScore() == their.getTotalScore()) {
             this.payout = 1.0D; // push
@@ -49,7 +49,11 @@ public class GameResult {
     }
 
     public boolean isWin() {
-        return this.getPayout() > 0D;
+        return this.getPayout() > 1.0D;
+    }
+
+    public boolean isPush() {
+        return this.getPayout() == 1.0D;
     }
 
     public double getPayout() {
